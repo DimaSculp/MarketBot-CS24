@@ -13,5 +13,15 @@ public class MessageHandlers {
             bot.execute(new SendMessage(chatId, "Привет! Это стартовое сообщение."));
             bot.
         }
+
+        if ("/authors".equals(text)) {
+            bot.execute(new SendMessage(chatId, "Бота создали Бабенко Андрей (EMP_3RR0R) и Кухтей Дмитрий (sculp2ra). Спасибо за интерес!"));
+            bot.
+        }
+
+        if ("/info".equals(text)) {
+            bot.execute(new SendMessage(chatId, "Этот бот создан для удобной публикации и отслеживания объявлений в канале Барахолка УрФУ."));
+            bot.
+        }
     }
 }
