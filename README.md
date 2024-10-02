@@ -27,3 +27,7 @@ Development stages:
 1.3) Writing tests for the command handler
 
 1.4) Adding asynchronicity
+
+2.1) Connecting the DB to the bot
+
+2.2) Creating a simple personal account (user ID, contact, number of active ads, money earned from ads)
