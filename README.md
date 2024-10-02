@@ -1,29 +1,29 @@
-Бот-объявитель для Барахолки УрФУ
+Announcement bot for UrFU Flea Market
 
-Авторы: Бабенко Андрей (https://t.me/minofprop), Кухтей Дмитрий (https://t.me/sculp2ra).
+Authors: Andrey Babenko (https://t.me/minofprop), Dmitry Kukhtey (https://t.me/sculp2ra).
 
-Краткое описание: Telegram-бот, принимающий заявки на выставление объявлений, отправляющий их на модерацию, а также выкладывающий их в саму Барахолку УрФУ. Также бот имеет возможность вести личный кабинет пользователя.
+Brief description: Telegram bot that accepts applications for posting ads, sends them for moderation, and also posts them in the UrFU Flea Market. The bot also has the ability to maintain a user's personal account.
 
-Цели:
+Goals:
 
--реализация простейших информационных команд
+-implementation of the simplest information commands
 
--реализация принятия объявлений и отправки их в чат модерации
+implementation of accepting ads and sending them to the moderation chat
 
--реализация выставления подтверждённых модерацией объявлений в канал объявлений
+-implementation of posting ads confirmed by moderation to the ad channel
 
--реализация личного кабинета со статистикой
+-implementation of a personal account with statistics
 
--реализация удаления неактуальных объявлений из канала объявлений (опционально)
+-implementation of deleting irrelevant ads from the ad channel (optional)
 
--реализация конвертации валют в объявлении (опционально)
+-implementation of currency conversion in the ad (optional)
 
-Этапы разработки:
+Development stages:
 
-1.1) Подключение библиотеки для работы с Telegram API (https://github.com/pengrad/java-telegram-bot-api)
+1.1) Connecting a library for working with Telegram API (https://github.com/pengrad/java-telegram-bot-api)
 
-1.2) Реализация обработки простейших информационных команд (/help, /info, /authors, /start) через отдельные классы
+1.2) Implementation of processing the simplest information commands (/help, /info, /authors, /start) through separate classes
 
-1.4) Написание тестов для обработчика команд
+1.3) Writing tests for the command handler
 
-1.5) Добавление асинхронности
+1.4) Adding asynchronicity
