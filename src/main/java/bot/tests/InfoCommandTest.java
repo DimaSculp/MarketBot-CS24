@@ -1,22 +1,37 @@
-package bot/tests
+package bot.tests
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class InfoCommandTest {
+public class InfoCommandTest {
 
     private InfoCommand infoCommand;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         infoCommand = new InfoCommand();
     }
 
     @Test
-    void testGetContent() {
-        // проверка содержания команды
-        String expectedContent = "Этот бот помогает...";
-        assertEquals(expectedContent, infoCommand.getContent());
+    public void testGetDescription() {
+        String expectedDescription = "Краткое описание бота.";
+        String actualDescription = infoCommand.getDescription();
+        assertEquals(expectedDescription, actualDescription, "Ошибка при проверке описания команды");
     }
+
+    @Test
+    public void testGetContent() {
+        String expectedContent = "Этот бот создан для удобной публикации и отслеживания объявлений в канале Барахолка УрФУ.";
+        String actualContent = infoCommand.getContent();
+        assertEquals(expectedContent, actualContent, "Ошибка при проверке вызова команды");
+    }
+
+    @Test
+    public void testGetCommand() {
+        String expectedCommand = "/info";
+        String actualCommand = infoCommand.getCommand();
+        assertEquals(expectedCommand, actualCommand, "Ошибка при проверке названия команды");
+    }
+
 }
