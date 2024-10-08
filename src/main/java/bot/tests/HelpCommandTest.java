@@ -1,5 +1,10 @@
 package bot.tests
 
+import bot.Commands.HelpCommand;
+import bot.Commands.AuthorsCommand;
+import bot.Commands.InfoCommand;
+import bot.Commands.ProfileCommand;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.HashMap;
