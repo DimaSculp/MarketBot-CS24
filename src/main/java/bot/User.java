@@ -3,16 +3,16 @@ package bot;
 import java.util.Arrays;
 
 public class User {
-    private long userId; // ID пользователя
-    private String userLink; // Ссылка на пользователя
-    private String[] activeAds; // Ссылки на активные объявления
-    private int activeAdsCount; // Количество активных объявлений
-    private int earnedMoney; // Количество заработанных рублей
+    private long userId;
+    private String userLink;
+    private String[] activeAds;
+    private int activeAdsCount;
+    private int earnedMoney;
 
     public User(long userId, String userLink) {
         this.userId = userId;
         this.userLink = userLink;
-        this.activeAds = new String[0]; // Изначально нет активных объявлений
+        this.activeAds = new String[0];
         this.activeAdsCount = 0;
         this.earnedMoney = 0;
     }

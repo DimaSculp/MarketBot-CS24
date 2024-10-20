@@ -6,8 +6,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import io.github.cdimascio.dotenv.Dotenv;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DatabaseHandler {
 
@@ -23,20 +21,24 @@ public class DatabaseHandler {
     public DatabaseHandler() {
         try {
             connection = DriverManager.getConnection(URL, USER, PASSWORD);
-            System.out.println("База данных: " + URL + " успешна подключена.");
+            System.out.println("База данных: " + URL + " успешно подключена.");
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     public void addUser(User user) {
-        String insertUserSQL = "INSERT INTO users (user_id, user_link, active_ads_count, earned_money) VALUES (?, ?, ?, ?) " +
-                "ON CONFLICT (user_id) DO UPDATE SET user_link = EXCLUDED.user_link, active_ads_count = EXCLUDED.active_ads_count, earned_money = EXCLUDED.earned_money";
+        String insertUserSQL = "INSERT INTO public.users (user_id, user_link, active_ads_count, earned_money, active_ads) " +
+                "VALUES (?, ?, ?, ?, ?) " +
+                "ON CONFLICT (user_id) DO UPDATE SET user_link = EXCLUDED.user_link, " +
+                "active_ads_count = EXCLUDED.active_ads_count, earned_money = EXCLUDED.earned_money, " +
+                "active_ads = EXCLUDED.active_ads";
         try (PreparedStatement statement = connection.prepareStatement(insertUserSQL)) {
             statement.setLong(1, user.getUserId());
             statement.setString(2, user.getUserLink());
             statement.setInt(3, user.getActiveAdsCount());
             statement.setInt(4, user.getEarnedMoney());
+            statement.setArray(5, connection.createArrayOf("text", user.getActiveAds())); // Установка массива activeAds
             statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -44,11 +46,12 @@ public class DatabaseHandler {
     }
 
     public User getUserById(long userId) {
-        String selectUserSQL = "SELECT * FROM users WHERE user_id = ?";
+        String selectUserSQL = "SELECT * FROM public.users WHERE user_id = ?";
         try (PreparedStatement statement = connection.prepareStatement(selectUserSQL)) {
             statement.setLong(1, userId);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
+                String[] activeAds = (String[]) resultSet.getArray("active_ads").getArray();
                 return new User(
                         resultSet.getLong("user_id"),
                         resultSet.getString("user_link")
@@ -59,6 +62,7 @@ public class DatabaseHandler {
         }
         return null;
     }
+
     public void close() {
         try {
             if (connection != null) {

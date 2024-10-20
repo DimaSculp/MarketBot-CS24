@@ -27,8 +27,9 @@ public class OurBot {
         System.out.println("Асинхронно работают 10 потоков.");
 
         DatabaseHandler databaseHandler = new DatabaseHandler();
-        Map<String, BotCommands> commandMap = CommandInitializer.initializeCommands();
-        MessageHandlers messageHandlers = new MessageHandlers(databaseHandler);
+        Map<String, BotCommands> commandMap = CommandInitializer.initializeCommands(databaseHandler);
+        CommandInitializer.databaseHandler = databaseHandler;
+        MessageHandlers messageHandlers = new MessageHandlers(databaseHandler, commandMap);
         CallbackHandlers callbackHandlers = new CallbackHandlers(databaseHandler);
 
         bot.setUpdatesListener(updates -> {
@@ -43,7 +44,7 @@ public class OurBot {
         if (update.message() != null) {
             System.out.println("Получено сообщение от чата ID: " + update.message().chat().id() +
                     ". Текст сообщения: " + update.message().text());
-            messageHandlers.handleMessage(bot, update.message(), commandMap);
+            messageHandlers.handleMessage(bot, update.message());
         } else if (update.callbackQuery() != null) {
             System.out.println("Пользователь из чата ID: " + update.callbackQuery().from().id() +
                     " нажал на кнопку.");

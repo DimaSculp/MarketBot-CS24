@@ -6,20 +6,13 @@ import bot.User;
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
 
 public class StartCommand implements BotCommands {
-    public StartCommand(){
-
-    }
-
-    private DatabaseHandler databaseHandler;
+    private final DatabaseHandler databaseHandler;
     private long userId;
     private String userLink;
 
-    public StartCommand(DatabaseHandler databaseHandler, long userId, String userLink) {
+    public StartCommand(DatabaseHandler databaseHandler) {
         this.databaseHandler = databaseHandler;
-        this.userId = userId;
-        this.userLink = userLink;
     }
-
 
     @Override
     public String getDescription() {
@@ -37,7 +30,13 @@ public class StartCommand implements BotCommands {
     public String getCommand() {
         return "/start";
     }
-    public InlineKeyboardMarkup getKeyboard(){
+
+    public InlineKeyboardMarkup getKeyboard() {
         return Keyboards.getMainKeyboard();
+    }
+
+    public void setUserData(long userId, String userLink) {
+        this.userId = userId;
+        this.userLink = userLink;
     }
 }

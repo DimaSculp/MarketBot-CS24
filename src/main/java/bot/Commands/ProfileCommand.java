@@ -9,12 +9,8 @@ public class ProfileCommand implements BotCommands {
     private DatabaseHandler databaseHandler;
     private long userId;
 
-    public ProfileCommand(DatabaseHandler databaseHandler, long userId) {
+    public ProfileCommand(DatabaseHandler databaseHandler) {
         this.databaseHandler = databaseHandler;
-        this.userId = userId;
-    }
-    public ProfileCommand(){
-
     }
 
     @Override
@@ -25,17 +21,26 @@ public class ProfileCommand implements BotCommands {
     @Override
     public String getContent() {
         User user = databaseHandler.getUserById(userId);
-        return "Ваш профиль:\n" +
-                "ID: " + user.getUserId() + "\n" +
-                "Активные объявления: " + user.getActiveAdsCount() + "\n" +
-                "Заработанные деньги: " + user.getEarnedMoney() + " рублей";
+        if (user != null) {
+            return "Ваш профиль:\n" +
+                    "ID: " + user.getUserId() + "\n" +
+                    "Активные объявления: " + user.getActiveAdsCount() + "\n" +
+                    "Заработанные деньги: " + user.getEarnedMoney() + " рублей";
+        } else {
+            return "Профиль не найден.";
+        }
     }
 
     @Override
     public String getCommand() {
         return "/profile";
     }
-    public InlineKeyboardMarkup getKeyboard(){
+
+    public InlineKeyboardMarkup getKeyboard() {
         return Keyboards.getToMenuKeyboard();
+    }
+
+    public void setUserData(long userId) {
+        this.userId = userId;
     }
 }
