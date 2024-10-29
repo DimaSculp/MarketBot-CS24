@@ -1,4 +1,4 @@
-package bot.tests
+package bot.Commands
 
 import bot.Commands.AuthorsCommand;
 
