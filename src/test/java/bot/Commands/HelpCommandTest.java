@@ -1,9 +1,4 @@
-package bot.tests
-
-import bot.Commands.HelpCommand;
-import bot.Commands.AuthorsCommand;
-import bot.Commands.InfoCommand;
-import bot.Commands.ProfileCommand;
+package bot.Commands;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class HelpCommandTest {
 
@@ -20,11 +16,27 @@ public class HelpCommandTest {
     @BeforeEach
     public void setUp() {
         commandMap = new HashMap<>();
-        commandMap.put("/help", mock(HelpCommand.class));
-        commandMap.put("/authors", mock(AuthorsCommand.class));
-        commandMap.put("/info", mock(InfoCommand.class));
-        commandMap.put("/start", mock(StartCommand.class));
-        commandMap.put("/profile", mock(ProfileCommand.class));
+
+        BotCommands mockHelpCommand = mock(HelpCommand.class);
+        when(mockHelpCommand.getDescription()).thenReturn("Список команд");
+        commandMap.put("/help", mockHelpCommand);
+
+        BotCommands mockAuthorsCommand = mock(AuthorsCommand.class);
+        when(mockAuthorsCommand.getDescription()).thenReturn("Авторы проекта");
+        commandMap.put("/authors", mockAuthorsCommand);
+
+        BotCommands mockInfoCommand = mock(InfoCommand.class);
+        when(mockInfoCommand.getDescription()).thenReturn("Краткое описание бота.");
+        commandMap.put("/info", mockInfoCommand);
+
+        BotCommands mockStartCommand = mock(StartCommand.class);
+        when(mockStartCommand.getDescription()).thenReturn("Команда для начала работы");
+        commandMap.put("/start", mockStartCommand);
+
+        BotCommands mockProfileCommand = mock(ProfileCommand.class);
+        when(mockProfileCommand.getDescription()).thenReturn("Просмотр Вашего профиля");
+        commandMap.put("/profile", mockProfileCommand);
+
         helpCommand = new HelpCommand(commandMap);
     }
 
@@ -39,10 +51,11 @@ public class HelpCommandTest {
     public void testGetContent() {
         StringBuilder expectedContent = new StringBuilder("Доступные команды:\n");
         expectedContent.append("/help - Список команд\n")
-                       .append("/authors - Авторы проекта\n")
-                       .append("/info - Краткое описание бота.\n")
-                       .append("/start - Команда для начала работы\n")
-                       .append("/profile - Просмотр Вашего профиля\n");
+                .append("/authors - Авторы проекта\n")
+                .append("/info - Краткое описание бота.\n")
+                .append("/start - Команда для начала работы\n")
+                .append("/profile - Просмотр Вашего профиля\n");
+
         String actualContent = helpCommand.getContent();
         assertEquals(expectedContent.toString(), actualContent, "Ошибка при проверке вызова команды");
     }
