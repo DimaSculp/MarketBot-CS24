@@ -1,4 +1,4 @@
-package bot.Commands
+package bot.Commands;
 
 import bot.Commands.AuthorsCommand;
 
@@ -19,7 +19,7 @@ public class AuthorsCommandTest {
     public void testGetDescription() {
         String expectedDescription = "Авторы проекта";
         String actualDescription = authorsCommand.getDescription();
-        assertEquals(expectedDescription, actualDescription, "Ошибка при проверке описания команды"");
+        assertEquals(expectedDescription, actualDescription, "Ошибка при проверке описания команды");
     }
 
     @Test
