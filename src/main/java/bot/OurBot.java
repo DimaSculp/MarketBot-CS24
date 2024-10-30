@@ -29,9 +29,8 @@ public class OurBot {
         DatabaseHandler databaseHandler = new DatabaseHandler();
         Map<String, BotCommands> commandMap = CommandInitializer.initializeCommands(databaseHandler);
         CommandInitializer.databaseHandler = databaseHandler;
-        MessageHandlers messageHandlers = new MessageHandlers(databaseHandler, commandMap);
         CallbackHandlers callbackHandlers = new CallbackHandlers(databaseHandler);
-
+        MessageHandlers messageHandlers = new MessageHandlers(databaseHandler, commandMap, callbackHandlers);
         bot.setUpdatesListener(updates -> {
             updates.forEach(update -> {
                 CompletableFuture.runAsync(() -> handleUpdate(bot, update, commandMap, messageHandlers, callbackHandlers), executor);

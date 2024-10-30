@@ -11,6 +11,13 @@ public class Keyboards {
                 new InlineKeyboardButton("Мой профиль").callbackData("my_profile")
         );
     }
+
+    public static InlineKeyboardMarkup getStartKeyboard() {
+        return new InlineKeyboardMarkup(
+                new InlineKeyboardButton("Главное меню").callbackData("go_to_menu"),
+                new InlineKeyboardButton("Мой профиль").callbackData("my_profile")
+        );
+    }
     public static InlineKeyboardMarkup getToMenuKeyboard() {
         return new InlineKeyboardMarkup(
                 new InlineKeyboardButton("Главное меню").callbackData("go_to_menu")

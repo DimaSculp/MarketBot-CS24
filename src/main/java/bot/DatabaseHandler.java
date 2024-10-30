@@ -38,7 +38,7 @@ public class DatabaseHandler {
             statement.setString(2, user.getUserLink());
             statement.setInt(3, user.getActiveAdsCount());
             statement.setInt(4, user.getEarnedMoney());
-            statement.setArray(5, connection.createArrayOf("text", user.getActiveAds())); // Установка массива activeAds
+            statement.setArray(5, connection.createArrayOf("text", user.getActiveAds()));
             statement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -54,7 +54,10 @@ public class DatabaseHandler {
                 String[] activeAds = (String[]) resultSet.getArray("active_ads").getArray();
                 return new User(
                         resultSet.getLong("user_id"),
-                        resultSet.getString("user_link")
+                        resultSet.getString("user_link"),
+                        activeAds,
+                        resultSet.getInt("active_ads_count"),
+                        resultSet.getInt("earned_money")
                 );
             }
         } catch (SQLException e) {
@@ -62,6 +65,8 @@ public class DatabaseHandler {
         }
         return null;
     }
+
+
 
     public void close() {
         try {

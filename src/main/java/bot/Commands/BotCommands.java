@@ -8,3 +8,4 @@ public interface BotCommands {
     String getCommand();
     InlineKeyboardMarkup getKeyboard();
 }
+

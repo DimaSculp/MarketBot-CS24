@@ -9,6 +9,14 @@ public class User {
     private int activeAdsCount;
     private int earnedMoney;
 
+    public User(long userId, String userLink, String[] activeAds, int activeAdsCount, int earnedMoney) {
+        this.userId = userId;
+        this.userLink = userLink;
+        this.activeAds = activeAds;
+        this.activeAdsCount = activeAdsCount;
+        this.earnedMoney = earnedMoney;
+    }
+
     public User(long userId, String userLink) {
         this.userId = userId;
         this.userLink = userLink;
