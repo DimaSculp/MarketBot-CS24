@@ -1,4 +1,4 @@
-package bot.Commands
+package bot.Commands;
 
 import bot.Commands.InfoCommand;
 
