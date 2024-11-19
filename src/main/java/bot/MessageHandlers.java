@@ -23,8 +23,8 @@ public class MessageHandlers {
         String text = message.text();
         long userId = message.chat().id();
         String userLink = "https://t.me/" + message.from().username();
-        if (callbackHandlers.hasActiveAd(userId)) {  // Проверка на наличие активного объявления
-            callbackHandlers.handleMessage(bot, message); // Перенаправляем сообщение для обработки объявления
+        if (callbackHandlers.hasActiveAd(userId)) {
+            callbackHandlers.handleMessage(bot, message);
             return;
         }
         CommandInitializer.UserID = userId;
