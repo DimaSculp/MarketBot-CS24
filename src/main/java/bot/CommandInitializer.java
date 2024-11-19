@@ -28,6 +28,8 @@ public class CommandInitializer {
         return commandMap;
     }
 
+
+
     public static void updateUserData() {
         startCommand.setUserData(UserID, userLink);
         profileCommand.setUserData(UserID);

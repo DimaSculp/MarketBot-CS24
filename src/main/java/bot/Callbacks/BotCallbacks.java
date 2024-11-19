@@ -1,11 +1,10 @@
-package bot.Commands;
+package bot.Callbacks;
 
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
 
-public interface BotCommands {
-    String getDescription();
+public interface BotCallbacks {
     String getContent();
-    String getCommand();
-    InlineKeyboardMarkup getKeyboard();
-}
 
+    InlineKeyboardMarkup getKeyboard();
+
+}

@@ -20,6 +20,8 @@ public class ProfileCommand implements BotCommands {
 
     @Override
     public String getContent() {
+        System.out.println("Получение данных для userId: " + userId);
+
         User user = databaseHandler.getUserById(userId);
         if (user != null) {
             return "Ваш профиль:\n" +

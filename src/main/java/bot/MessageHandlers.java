@@ -9,16 +9,24 @@ import java.util.Map;
 
 public class MessageHandlers {
     private final Map<String, BotCommands> commandMap;
+    private final CallbackHandlers callbackHandlers;
 
-    public MessageHandlers(DatabaseHandler databaseHandler, Map<String, BotCommands> commandMap) {
+    public MessageHandlers(DatabaseHandler databaseHandler, Map<String, BotCommands> commandMap, CallbackHandlers callbackHandlers) {
         this.commandMap = commandMap;
+        this.callbackHandlers = callbackHandlers;
     }
+
+
 
     public void handleMessage(TelegramBot bot, Message message) {
         String chatId = message.chat().id().toString();
         String text = message.text();
         long userId = message.chat().id();
         String userLink = "https://t.me/" + message.from().username();
+        if (callbackHandlers.hasActiveAd(userId)) {  // Проверка на наличие активного объявления
+            callbackHandlers.handleMessage(bot, message); // Перенаправляем сообщение для обработки объявления
+            return;
+        }
         CommandInitializer.UserID = userId;
         CommandInitializer.userLink = userLink;
         CommandInitializer.updateUserData();
