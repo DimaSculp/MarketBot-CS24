@@ -3,42 +3,38 @@ package bot;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.request.SendMessage;
-import org.jetbrains.annotations.NotNull;
+import bot.Commands.BotCommands;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.Map;
 
 public class MessageHandlers {
+    private final Map<String, BotCommands> commandMap;
+    private final CallbackHandlers callbackHandlers;
 
-    public static void handleMessage(TelegramBot bot, @NotNull Message message) {
+    public MessageHandlers(DatabaseHandler databaseHandler, Map<String, BotCommands> commandMap, CallbackHandlers callbackHandlers) {
+        this.commandMap = commandMap;
+        this.callbackHandlers = callbackHandlers;
+    }
+
+
+
+    public void handleMessage(TelegramBot bot, Message message) {
         String chatId = message.chat().id().toString();
         String text = message.text();
-
-        if ("/start".equals(text)) {
-            CompletableFuture.runAsync(() ->
-                    bot.execute(new SendMessage(chatId, "Привет! Это стартовое сообщение."))
-            );
+        long userId = message.chat().id();
+        String userLink = "https://t.me/" + message.from().username();
+        if (callbackHandlers.hasActiveAd(userId)) {  // Проверка на наличие активного объявления
+            callbackHandlers.handleMessage(bot, message); // Перенаправляем сообщение для обработки объявления
+            return;
         }
-
-        if ("/authors".equals(text)) {
-            CompletableFuture.runAsync(() ->
-                    bot.execute(new SendMessage(chatId, "Бота создали Бабенко Андрей (EMP_3RR0R) и Кухтей Дмитрий (sculp2ra). Спасибо за интерес!"))
-            );
-        }
-
-        if ("/info".equals(text)) {
-            CompletableFuture.runAsync(() ->
-                    bot.execute(new SendMessage(chatId, "Этот бот создан для удобной публикации и отслеживания объявлений в канале Барахолка УрФУ."))
-            );
-        }
-
-        if ("/help".equals(text)) {
-            CompletableFuture.runAsync(() -> {
-                StringBuilder helpMessage = new StringBuilder("Доступные команды:\n");
-                CommandMap.getCommandsMap().forEach((command, description) ->
-                        helpMessage.append(command).append(": ").append(description).append("\n")
-                );
-                bot.execute(new SendMessage(chatId, helpMessage.toString()));
-            });
+        CommandInitializer.UserID = userId;
+        CommandInitializer.userLink = userLink;
+        CommandInitializer.updateUserData();
+        BotCommands command = commandMap.get(text);
+        if (command != null) {
+            bot.execute(new SendMessage(chatId, command.getContent()).replyMarkup(command.getKeyboard()));
+        } else {
+            bot.execute(new SendMessage(chatId, "Неизвестная команда. Введите /help для списка команд."));
         }
     }
 }
