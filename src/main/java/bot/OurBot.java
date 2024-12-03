@@ -31,15 +31,16 @@ public class OurBot {
         CommandInitializer.databaseHandler = databaseHandler;
         CallbackHandlers callbackHandlers = new CallbackHandlers(databaseHandler);
         MessageHandlers messageHandlers = new MessageHandlers(databaseHandler, commandMap, callbackHandlers);
+        ModerationHandler moderationHandler = new ModerationHandler(bot, databaseHandler);
         bot.setUpdatesListener(updates -> {
             updates.forEach(update -> {
-                CompletableFuture.runAsync(() -> handleUpdate(bot, update, commandMap, messageHandlers, callbackHandlers), executor);
+                CompletableFuture.runAsync(() -> handleUpdate(bot, update, commandMap, messageHandlers, callbackHandlers, moderationHandler), executor);
             });
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });
     }
 
-    private static void handleUpdate(TelegramBot bot, Update update, Map<String, BotCommands> commandMap, MessageHandlers messageHandlers, CallbackHandlers callbackHandlers) {
+    private static void handleUpdate(TelegramBot bot, Update update, Map<String, BotCommands> commandMap, MessageHandlers messageHandlers, CallbackHandlers callbackHandlers,  ModerationHandler moderationHandler) {
         if (update.message() != null) {
             System.out.println("Получено сообщение от чата ID: " + update.message().chat().id() +
                     ". Текст сообщения: " + update.message().text());
@@ -48,6 +49,9 @@ public class OurBot {
             System.out.println("Пользователь из чата ID: " + update.callbackQuery().from().id() +
                     " нажал на кнопку.");
             callbackHandlers.handleCallback(bot, update.callbackQuery(), commandMap);
+        } else if (update.channelPost() != null) {
+            System.out.println("Обнаружено сообщение в канале ID: " + update.channelPost().chat().id());
+            moderationHandler.handleUpdate(update);
         }
     }
 }

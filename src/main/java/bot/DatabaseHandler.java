@@ -18,6 +18,10 @@ public class DatabaseHandler {
 
     private Connection connection;
 
+    public Connection getConnection() {
+        return connection;
+    }
+
     public DatabaseHandler() {
         try {
             connection = DriverManager.getConnection(URL, USER, PASSWORD);

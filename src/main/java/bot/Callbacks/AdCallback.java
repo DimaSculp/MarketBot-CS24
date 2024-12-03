@@ -87,11 +87,12 @@ public class AdCallback implements BotCallbacks {
     public String getContent() {
         String userLink = databaseHandler.getUserById(chatId).getUserLink();
         StringBuilder content = new StringBuilder();
+        /*.append("<a href=\"")*/
         content.append("<b>").append(title).append("</b>\n\n")
                 .append(description).append("\n\n")
                 .append("Цена: ").append(price).append(" руб.\n\n")
                 .append("<b>").append(userLink.replace("https://t.me/", "")).append("</b>\n\n")
-                .append("<a href=\"").append(userLink).append("\">Перейти к продавцу</a>\n\n")
+                /*.append("<a href=\"")*/.append("продавец: ").append(userLink).append("\n")/*append("\">Перейти к продавцу</a>\n\n")*/
                 .append("<a href=\"https://t.me/SculpTestShopBot\">Разместить объявление</a>");
         return content.toString();
     }
@@ -134,6 +135,4 @@ public class AdCallback implements BotCallbacks {
             System.err.println("Ошибка при отправке медиа-группы в канал: " + e.getMessage());
         }
     }
-
-
 }
