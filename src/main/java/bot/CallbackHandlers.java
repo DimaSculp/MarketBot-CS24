@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class CallbackHandlers {
     private static DatabaseHandler databaseHandler;
-    private Map<Long, AdCallback> adCallbacks = new HashMap<>();
+    protected Map<Long, AdCallback> adCallbacks = new HashMap<>();
 
     public CallbackHandlers(DatabaseHandler databaseHandler) {
         this.databaseHandler = databaseHandler;
@@ -83,7 +83,7 @@ public class CallbackHandlers {
         return adCallbacks.containsKey(chatId);
     }
 
-    private void completeAdCreation(TelegramBot bot, long chatId) {
+    protected void completeAdCreation(TelegramBot bot, long chatId) {
         AdCallback adCallback = adCallbacks.get(chatId);
         if (adCallback != null) {
             adCallback.sendAd();
