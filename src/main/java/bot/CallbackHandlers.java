@@ -2,6 +2,8 @@ package bot;
 
 import bot.Callbacks.AdCallback;
 import bot.Commands.BotCommands;
+import bot.Commands.ProfileCommand;
+import bot.Commands.HelpCommand;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.CallbackQuery;
 import com.pengrad.telegrambot.model.Message;
@@ -25,12 +27,35 @@ public class CallbackHandlers {
         long chatId = callbackQuery.message().chat().id();
 
         switch (callbackData) {
-            case "add_ad":
-                // Инициализация нового объявления
+            case "to_create":
                 adCallbacks.put(chatId, new AdCallback(bot, databaseHandler, chatId));
                 bot.execute(new SendMessage(chatId, "Пожалуйста, отправьте название объявления (до 45 символов)."));
                 break;
+            case "to_profile":
+                // Получаем команду "profile" из мапы команд
+                ProfileCommand profileCommand = (ProfileCommand) commandMap.get("/profile");
+                profileCommand.setUserData(chatId); // Устанавливаем userId (chatId)
+                String profileContent = profileCommand.getContent(); // Получаем информацию о профиле
 
+                // Создаем объект SendMessage с текстом и клавиатурой
+                SendMessage message = new SendMessage(chatId, profileContent);
+                message.replyMarkup(profileCommand.getKeyboard()); // Устанавливаем клавиатуру
+
+                // Отправляем сообщение пользователю с профилем и клавиатурой
+                bot.execute(message);
+                break;
+            case "to_help":
+                // Получаем команду "help" из мапы команд
+                HelpCommand helpCommand = (HelpCommand) commandMap.get("/help");
+
+                String helpContent = helpCommand.getContent(); // Получаем список команд
+
+                // Создаем объект SendMessage с текстом и клавиатурой
+                SendMessage helpMessage = new SendMessage(chatId, helpContent);
+
+                // Отправляем сообщение пользователю с описанием команд и клавиатурой
+                bot.execute(helpMessage);
+                break;
             default:
                 break;
         }

@@ -31,3 +31,13 @@ Development stages:
 2.1) Connecting the DB to the bot
 
 2.2) Creating a simple personal account (user ID, contact, number of active ads, money earned from ads)
+
+3.1) Creating an ad creation button
+
+3.2) Creating an ad in several stages: name, description, price, photo (up to 10)
+
+3.3) Parsing the sent information into a beautiful ad
+
+4.1) Sending a compiled announcement to the moderation chat
+
+4.2) Adding the possibility of confirmation or refusal with a note of the reason for the publication of the announcement. The response to the message with the announcement with the text "approve" confirms and publishes the announcement in the channel with announcements, any other text is transmitted to the creator of the announcement in the bot as an explanation of the refusal, the announcement is not published.

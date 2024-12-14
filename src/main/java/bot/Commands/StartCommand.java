@@ -32,7 +32,7 @@ public class StartCommand implements BotCommands {
     }
 
     public InlineKeyboardMarkup getKeyboard() {
-        return Keyboards.getMainKeyboard();
+        return Keyboards.getStartKeyboard();
     }
 
     public void setUserData(long userId, String userLink) {
