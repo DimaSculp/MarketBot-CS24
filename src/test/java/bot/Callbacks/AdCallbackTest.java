@@ -90,18 +90,14 @@ class AdCallbackTest {
 
     @Test
     void getContent_valid() {
-        // Используем второй конструктор User
         User mockUser = new User(123456789L, "https://t.me/TestUser");
 
-        // Имитация возвращаемого пользователя из mockDatabaseHandler
         when(mockDatabaseHandler.getUserById(123456789L)).thenReturn(mockUser);
 
-        // Устанавливаем данные объявления
         adCallback.setTitle("Пример объявления");
         adCallback.setDescription("Пример описания");
         adCallback.setPrice(3000);
 
-        // Проверяем содержание
         String content = adCallback.getContent();
         assertTrue(content.contains("**Пример объявления**"), "Содержит заголовок");
         assertTrue(content.contains("Пример описания"), "Содержит описание");
@@ -111,33 +107,29 @@ class AdCallbackTest {
 
     @Test
     void sendAd_valid() {
-        // Подготовка данных
         adCallback.setTitle("Пример объявления");
         adCallback.setDescription("Описание объявления");
         adCallback.setPrice(2500);
         adCallback.addPhoto("photoFileId1");
         adCallback.addPhoto("photoFileId2");
 
-        // Вызов метода
         adCallback.sendAd();
 
-        // Проверка вызовов для SendPhoto
         ArgumentCaptor<SendPhoto> sendPhotoCaptor = ArgumentCaptor.forClass(SendPhoto.class);
         verify(mockBot, times(6)).execute(sendPhotoCaptor.capture());
         List<SendPhoto> capturedPhotos = sendPhotoCaptor.getAllValues();
 
         assertEquals(6, capturedPhotos.size());
-        assertEquals(chatId, capturedPhotos.get(0).getParameters().get("chat_id")); // Ожидаем реальный chatId
+        assertEquals(chatId, capturedPhotos.get(0).getParameters().get("chat_id"));
         assertEquals("photoFileId1", capturedPhotos.get(0).getParameters().get("photo"));
         assertEquals(chatId, capturedPhotos.get(1).getParameters().get("chat_id"));
         assertEquals("photoFileId2", capturedPhotos.get(1).getParameters().get("photo"));
 
-        // Проверка вызова для SendMessage
         ArgumentCaptor<SendMessage> sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class);
         verify(mockBot, times(6)).execute(sendMessageCaptor.capture());
         SendMessage capturedMessage = sendMessageCaptor.getValue();
 
-        assertEquals(-1002351079725L, capturedMessage.getParameters().get("chat_id")); // Ожидаем реальный chatId
+        assertEquals(-1002351079725L, capturedMessage.getParameters().get("chat_id"));
         assertEquals(adCallback.getContent(), capturedMessage.getParameters().get("text"));
     }
 }
