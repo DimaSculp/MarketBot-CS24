@@ -1,9 +1,15 @@
 package bot.Callbacks;
 
 import bot.DatabaseHandler;
+import bot.User;
 import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.request.SendMessage;
+import com.pengrad.telegrambot.request.SendPhoto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -12,12 +18,14 @@ class AdCallbackTest {
     private TelegramBot mockBot;
     private DatabaseHandler mockDatabaseHandler;
     private AdCallback adCallback;
+    private long chatId = 123456789;
 
     @BeforeEach
     void setUp() {
         mockBot = mock(TelegramBot.class);
         mockDatabaseHandler = mock(DatabaseHandler.class);
         adCallback = new AdCallback(mockBot, mockDatabaseHandler, 123456789L);
+        when(mockDatabaseHandler.getUserById(anyLong())).thenReturn(new User(123456789L, "https://t.me/TestUser"));
     }
 
     @Test
@@ -78,5 +86,50 @@ class AdCallbackTest {
         String result = adCallback.addPhoto("photoFileId11");
         assertEquals("Ошибка: достигнут лимит в 10 фотографий.", result);
         assertTrue(adCallback.isPhotosSet());
+    }
+
+    @Test
+    void getContent_valid() {
+        User mockUser = new User(123456789L, "https://t.me/TestUser");
+
+        when(mockDatabaseHandler.getUserById(123456789L)).thenReturn(mockUser);
+
+        adCallback.setTitle("Пример объявления");
+        adCallback.setDescription("Пример описания");
+        adCallback.setPrice(3000);
+
+        String content = adCallback.getContent();
+        assertTrue(content.contains("**Пример объявления**"), "Содержит заголовок");
+        assertTrue(content.contains("Пример описания"), "Содержит описание");
+        assertTrue(content.contains("3000 руб."), "Содержит цену");
+        assertTrue(content.contains("[Перейти к продавцу](https://t.me/TestUser)"), "Содержит ссылку на продавца");
+    }
+
+    @Test
+    void sendAd_valid() {
+        adCallback.setTitle("Пример объявления");
+        adCallback.setDescription("Описание объявления");
+        adCallback.setPrice(2500);
+        adCallback.addPhoto("photoFileId1");
+        adCallback.addPhoto("photoFileId2");
+
+        adCallback.sendAd();
+
+        ArgumentCaptor<SendPhoto> sendPhotoCaptor = ArgumentCaptor.forClass(SendPhoto.class);
+        verify(mockBot, times(6)).execute(sendPhotoCaptor.capture());
+        List<SendPhoto> capturedPhotos = sendPhotoCaptor.getAllValues();
+
+        assertEquals(6, capturedPhotos.size());
+        assertEquals(chatId, capturedPhotos.get(0).getParameters().get("chat_id"));
+        assertEquals("photoFileId1", capturedPhotos.get(0).getParameters().get("photo"));
+        assertEquals(chatId, capturedPhotos.get(1).getParameters().get("chat_id"));
+        assertEquals("photoFileId2", capturedPhotos.get(1).getParameters().get("photo"));
+
+        ArgumentCaptor<SendMessage> sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class);
+        verify(mockBot, times(6)).execute(sendMessageCaptor.capture());
+        SendMessage capturedMessage = sendMessageCaptor.getValue();
+
+        assertEquals(-1002351079725L, capturedMessage.getParameters().get("chat_id"));
+        assertEquals(adCallback.getContent(), capturedMessage.getParameters().get("text"));
     }
 }

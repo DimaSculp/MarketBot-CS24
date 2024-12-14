@@ -50,7 +50,7 @@ public class StartCommandTest {
 
     @Test
     public void testGetKeyboard() {
-        InlineKeyboardMarkup expectedKeyboard = Keyboards.getMainKeyboard();
+        InlineKeyboardMarkup expectedKeyboard = Keyboards.getStartKeyboard();
         InlineKeyboardMarkup actualKeyboard = startCommand.getKeyboard();
         assertEquals(expectedKeyboard, actualKeyboard, "Ошибка при проверке клавиатуры команды");
     }
