@@ -58,9 +58,14 @@ public class AdCallback implements BotCallbacks {
         }
     }
 
+    public int countPhoto(){
+        return photos.size();
+    }
+
     public String addPhoto(String fileId) {
         if (photos.size() < 10) {
             photos.add(fileId);
+            System.out.println("+ фотка :" + fileId);
             return "Фото успешно добавлено.";
         } else {
             return "Ошибка: достигнут лимит в 10 фотографий.";
@@ -79,21 +84,23 @@ public class AdCallback implements BotCallbacks {
         return price > 0;
     }
 
+
     public boolean isPhotosSet() {
-        return photos.size() <= 10;
+            return photos.size() > 0 && photos.size() <= 10;
     }
+
 
     @Override
     public String getContent() {
         String userLink = databaseHandler.getUserById(chatId).getUserLink();
         StringBuilder content = new StringBuilder();
-        /*.append("<a href=\"")*/
         content.append("<b>").append(title).append("</b>\n\n")
-                .append(description).append("\n\n")
-                .append("Цена: ").append(price).append(" руб.\n\n")
+                .append("<i>").append(description).append("</i>").append("\n\n")
+                .append("<b>Цена: </b>").append(price).append(" руб.\n\n")
                 .append("<b>").append(userLink.replace("https://t.me/", "")).append("</b>\n\n")
-                /*.append("<a href=\"")*/.append("продавец: ").append(userLink).append("\n")/*append("\">Перейти к продавцу</a>\n\n")*/
-                .append("<a href=\"https://t.me/SculpTestShopBot\">Разместить объявление</a>");
+                .append("<a href=\"").append(userLink).append(" \" >контакт продовца</a>\n")
+                .append("<a href=\"https://t.me/SculpTestShopBot\">разместить объявление</a>")
+                .append("~").append(photos);
         return content.toString();
     }
 
@@ -111,22 +118,13 @@ public class AdCallback implements BotCallbacks {
 
         isAdSent = true;
         System.out.println("Количество фотографий: " + photos.size());
-
         InputMediaPhoto[] media = new InputMediaPhoto[photos.size()];
         for (int i = 0; i < photos.size(); i++) {
             media[i] = new InputMediaPhoto(photos.get(i));
             if (i == 0) {
-                media[i].caption(getContent()).parseMode(ParseMode.HTML);
+                media[i].caption(getContent());
             }
         }
-
-        try {
-            bot.execute(new SendMediaGroup(chatId, media));
-            System.out.println("Отправлена медиа группа с " + photos.size() + " фотографиями.");
-        } catch (Exception e) {
-            System.err.println("Ошибка при отправке медиа-группы: " + e.getMessage());
-        }
-
         long channelId = -1002351079725L;
         try {
             bot.execute(new SendMediaGroup(channelId, media));

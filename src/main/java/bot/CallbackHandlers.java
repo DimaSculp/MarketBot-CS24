@@ -8,10 +8,14 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.CallbackQuery;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.PhotoSize;
-import com.pengrad.telegrambot.request.AnswerCallbackQuery;
+import com.pengrad.telegrambot.model.request.InlineKeyboardButton;
+import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
+import com.pengrad.telegrambot.model.request.Keyboard;
 import com.pengrad.telegrambot.request.SendMessage;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CallbackHandlers {
@@ -32,30 +36,23 @@ public class CallbackHandlers {
                 bot.execute(new SendMessage(chatId, "Пожалуйста, отправьте название объявления (до 45 символов)."));
                 break;
             case "to_profile":
-                // Получаем команду "profile" из мапы команд
                 ProfileCommand profileCommand = (ProfileCommand) commandMap.get("/profile");
-                profileCommand.setUserData(chatId); // Устанавливаем userId (chatId)
-                String profileContent = profileCommand.getContent(); // Получаем информацию о профиле
-
-                // Создаем объект SendMessage с текстом и клавиатурой
+                profileCommand.setUserData(chatId);
+                String profileContent = profileCommand.getContent();
                 SendMessage message = new SendMessage(chatId, profileContent);
-                message.replyMarkup(profileCommand.getKeyboard()); // Устанавливаем клавиатуру
-
-                // Отправляем сообщение пользователю с профилем и клавиатурой
+                message.replyMarkup(profileCommand.getKeyboard());
                 bot.execute(message);
                 break;
             case "to_help":
-                // Получаем команду "help" из мапы команд
                 HelpCommand helpCommand = (HelpCommand) commandMap.get("/help");
-
-                String helpContent = helpCommand.getContent(); // Получаем список команд
-
-                // Создаем объект SendMessage с текстом и клавиатурой
+                String helpContent = helpCommand.getContent();
                 SendMessage helpMessage = new SendMessage(chatId, helpContent);
-
-                // Отправляем сообщение пользователю с описанием команд и клавиатурой
                 bot.execute(helpMessage);
                 break;
+            case "end_create":
+                System.out.println("here");
+                completeAdCreation(bot, chatId);
+                bot.execute(new SendMessage(chatId, "Ваше объявление отправлено на модерацию! \n\n по техническим вопросам обращайтесь @sculp2ra"));
             default:
                 break;
         }
@@ -66,21 +63,18 @@ public class CallbackHandlers {
         AdCallback adCallback = adCallbacks.get(chatId);
         if (adCallback != null) {
             if (!adCallback.isTitleSet()) {
-                // Прием названия
                 String result = adCallback.setTitle(message.text());
                 bot.execute(new SendMessage(chatId, result));
                 if (result.contains("успешно")) {
                     bot.execute(new SendMessage(chatId, "Отправьте описание объявления (до 700 символов)."));
                 }
             } else if (!adCallback.isDescriptionSet()) {
-                // Прием описания
                 String result = adCallback.setDescription(message.text());
                 bot.execute(new SendMessage(chatId, result));
                 if (result.contains("успешно")) {
                     bot.execute(new SendMessage(chatId, "Укажите цену в рублях."));
                 }
             } else if (!adCallback.isPriceSet()) {
-                // Прием цены
                 try {
                     int price = Integer.parseInt(message.text());
                     String result = adCallback.setPrice(price);
@@ -91,32 +85,44 @@ public class CallbackHandlers {
                 } catch (NumberFormatException e) {
                     bot.execute(new SendMessage(chatId, "Ошибка: пожалуйста, укажите корректную цену (целое число)."));
                 }
-            } else if (!adCallback.isPhotosSet()) {
-                // Прием фотографий
-                PhotoSize[] photos = message.photo();
-                if (photos != null && photos.length > 0) {
-                    String fileId = photos[photos.length - 1].fileId(); // Получаем наибольшее разрешение фото
-                    String result = adCallback.addPhoto(fileId);
-                    bot.execute(new SendMessage(chatId, result));
-                    if (!result.contains("достигнут лимит")) {
-                        completeAdCreation(bot, chatId);
-                    }
-                } else {
-                    bot.execute(new SendMessage(chatId, "Пожалуйста, отправьте фотографии для объявления."));
+            } else if (message.photo() != null) {
+                    PhotoSize photo = message.photo()[message.photo().length - 1];
+                    String fileId = photo.fileId();
+                    adCallback.addPhoto(fileId);
+                    if (isSent){
+                    sendCheck(bot, chatId, adCallback);
                 }
             }
         }
     }
 
+
+    private boolean isSent = true;
+    private void sendCheck(TelegramBot bot,long chatId, AdCallback adCallback){
+        isSent = false;
+        System.out.println("tyt" );
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        SendMessage message = new SendMessage(chatId, "Вы добавили " + adCallback.countPhoto() +  " фотографий");
+        Keyboard keyB = new InlineKeyboardMarkup(
+                new InlineKeyboardButton("Завершить создание").callbackData("end_create")
+        );
+        message.replyMarkup(keyB);
+        bot.execute(message);
+    }
+
     public boolean hasActiveAd(long chatId) {
-        return adCallbacks.containsKey(chatId); // Проверяем, есть ли активное объявление
+        return adCallbacks.containsKey(chatId);
     }
 
     protected void completeAdCreation(TelegramBot bot, long chatId) {
         AdCallback adCallback = adCallbacks.get(chatId);
         if (adCallback != null) {
-            adCallback.sendAd(); // Отправка в канал и пользователю
-            adCallbacks.remove(chatId); // Завершение и очистка
+            adCallback.sendAd();
+            adCallbacks.remove(chatId);
         }
     }
 }

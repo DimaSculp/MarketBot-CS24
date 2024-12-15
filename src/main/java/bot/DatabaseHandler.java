@@ -5,6 +5,11 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.pengrad.telegrambot.model.Message;
 import io.github.cdimascio.dotenv.Dotenv;
 
 public class DatabaseHandler {
@@ -69,7 +74,20 @@ public class DatabaseHandler {
         }
         return null;
     }
-
+    public  long findUserIdByUserlink(String userlink) {
+        String query = "SELECT user_id FROM public.users WHERE user_link = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, userlink);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getLong("user_id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 
 
     public void close() {
@@ -81,4 +99,5 @@ public class DatabaseHandler {
             e.printStackTrace();
         }
     }
+
 }
