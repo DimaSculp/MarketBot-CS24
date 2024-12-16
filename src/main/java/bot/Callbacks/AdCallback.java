@@ -3,7 +3,6 @@ package bot.Callbacks;
 import bot.DatabaseHandler;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
-import com.pengrad.telegrambot.model.request.ParseMode;
 import com.pengrad.telegrambot.request.SendMediaGroup;
 import com.pengrad.telegrambot.model.request.InputMediaPhoto;
 
@@ -20,9 +19,6 @@ public class AdCallback implements BotCallbacks {
     private int price;
     private List<String> photos;
     private DatabaseHandler databaseHandler;
-
-
-
 
     public AdCallback(TelegramBot bot, DatabaseHandler databaseHandler, long chatId) {
         this.bot = bot;
@@ -71,25 +67,18 @@ public class AdCallback implements BotCallbacks {
             return "Ошибка: достигнут лимит в 10 фотографий.";
         }
     }
-
     public boolean isTitleSet() {
         return title != null;
     }
-
     public boolean isDescriptionSet() {
         return description != null;
     }
-
     public boolean isPriceSet() {
         return price > 0;
     }
-
-
     public boolean isPhotosSet() {
             return photos.size() > 0 && photos.size() <= 10;
     }
-
-
     @Override
     public String getContent() {
         String userLink = databaseHandler.getUserById(chatId).getUserLink();
@@ -103,19 +92,15 @@ public class AdCallback implements BotCallbacks {
                 .append("~").append(photos);
         return content.toString();
     }
-
-
     @Override
     public InlineKeyboardMarkup getKeyboard() {
         return null;
     }
     private boolean isAdSent = false;
-
     public void sendAd() {
         if (isAdSent) {
             return;
         }
-
         isAdSent = true;
         System.out.println("Количество фотографий: " + photos.size());
         InputMediaPhoto[] media = new InputMediaPhoto[photos.size()];

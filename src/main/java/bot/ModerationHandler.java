@@ -1,28 +1,37 @@
 package bot;
 
+
 import com.pengrad.telegrambot.TelegramBot;
-import com.pengrad.telegrambot.model.PhotoSize;
-import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.model.Message;
+import com.pengrad.telegrambot.request.CopyMessage;
+import com.pengrad.telegrambot.request.SendMediaGroup;
+import com.pengrad.telegrambot.model.Update;
+import com.pengrad.telegrambot.response.MessageIdResponse;
+import com.pengrad.telegrambot.response.MessagesResponse;
+
+
 import com.pengrad.telegrambot.model.request.InputMediaPhoto;
 import com.pengrad.telegrambot.model.request.ParseMode;
-import com.pengrad.telegrambot.request.CopyMessage;
-
-import com.pengrad.telegrambot.request.SendMediaGroup;
 import com.pengrad.telegrambot.request.SendMessage;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+
 
 public class ModerationHandler {
     private final TelegramBot bot;
     private final DatabaseHandler databaseHandler;
+    private static final String TARGET_CHANNEL_USERNAME = "KB2024CHANNEL";
+    private static final long TARGET_CHANNEL_ID = -1002397946078L;
 
     public ModerationHandler(TelegramBot bot, DatabaseHandler databaseHandler) {
         this.bot = bot;
         this.databaseHandler = databaseHandler;
     }
+
     private List<String> parseFileId(String text) {
         List<String> fileIds = new ArrayList<>();
         if (text == null || text.isEmpty()) {
@@ -49,40 +58,65 @@ public class ModerationHandler {
                 Message repliedMessage = channelPost.replyToMessage();
                 String replyText = channelPost.text();
                 String originalText = repliedMessage.caption();
-                System.out.println("Проверенное объявление: " + originalText);
-                System.out.println("Текст ответа: " + replyText);
+                //System.out.println("Проверенное объявление: " + originalText);
+                //System.out.println("Текст ответа: " + replyText);
                 if (replyText != null) {
                     String userLink = extractUserLink(originalText);
                     long userId = databaseHandler.findUserIdByUserlink(userLink);
                     if (replyText.equalsIgnoreCase("approved")) {
-                        long targetChannelId = -1002397946078L;
+                        String originalTextTrimmed = originalText.substring(0, originalText.indexOf('~')).trim();
+                        String messageLink = null;
                         if (repliedMessage.mediaGroupId() != null) {
                             List<String> photos = parseFileId(originalText);
-                            originalText = originalText.substring(0, originalText.indexOf('~')).trim();
                             System.out.println("Собранные фотографии: " + photos);
                             InputMediaPhoto[] media = new InputMediaPhoto[photos.size()];
                             for (int i = 0; i < photos.size(); i++) {
                                 media[i] = new InputMediaPhoto(photos.get(i));
                                 if (i == 0) {
-                                    media[i].caption(originalText).parseMode(ParseMode.HTML);
+                                    media[i].caption(originalTextTrimmed).parseMode(ParseMode.HTML);
                                 }
                             }
+                            SendMediaGroup sendMediaGroup = new SendMediaGroup(TARGET_CHANNEL_ID, media);
+                            MessagesResponse response = bot.execute(sendMediaGroup);
+                            if (response.isOk()) {
+                                Message[] sentMessage = response.messages();
+                                int messageId = sentMessage[0].messageId();
+                                messageLink = "https://t.me/" + TARGET_CHANNEL_USERNAME + "/" + messageId;
+                                System.out.println("Ссылка на сообщение: " + messageLink);
+                            }
                             bot.execute(new SendMediaGroup(userId, media));
-                            bot.execute(new SendMediaGroup(targetChannelId, media));
                         } else {
-                            originalText = originalText.substring(0, originalText.indexOf('~')).trim();
-                            bot.execute(new CopyMessage(
-                                    targetChannelId,
+                            CopyMessage copyToChannel = new CopyMessage(
+                                    TARGET_CHANNEL_ID,
                                     repliedMessage.chat().id(),
                                     repliedMessage.messageId()
-                            ).parseMode(ParseMode.HTML).caption(originalText));
-                            bot.execute(new CopyMessage(
+                            ).parseMode(ParseMode.HTML).caption(originalTextTrimmed);
+
+                            MessageIdResponse response = bot.execute(copyToChannel);
+                            if (response.isOk()) {
+                                int messageId = response.messageId();
+                                messageLink = "https://t.me/" + TARGET_CHANNEL_USERNAME + "/" + messageId;
+                                System.out.println("Ссылка на сообщение: " + messageLink);
+                            }
+
+                            CopyMessage copyToUser = new CopyMessage(
                                     userId,
                                     repliedMessage.chat().id(),
                                     repliedMessage.messageId()
-                            ).parseMode(ParseMode.HTML).caption(originalText));
+                            ).parseMode(ParseMode.HTML).caption(originalTextTrimmed);
+                            bot.execute(copyToUser);
                         }
-                        bot.execute(new SendMessage(userId, "Ваше объявление опубликовано!"));
+
+                        if (messageLink != null) {
+                            System.out.println(databaseHandler.getConnection());
+                            databaseHandler.addAdToUser(userId, messageLink);
+                            bot.execute(new SendMessage(userId, "Ваше объявление опубликовано!\nТеперь оно" +
+                                    " доступно по < a=href\"" + messageLink + "\">ссылке</a>").parseMode(ParseMode.HTML));
+                            System.out.println("Сообщение опубликовано. Ссылка: " + messageLink);
+                        } else {
+                            bot.execute(new SendMessage(userId, "Ваше объявление опубликовано, но не удалось получить ссылку."));
+                            System.out.println("Сообщение опубликовано, но ссылка не получена.");
+                        }
                     } else {
                         System.out.println(userLink);
                         if (userLink != null) {
@@ -100,6 +134,7 @@ public class ModerationHandler {
             }
         }
     }
+
 
 
     private String extractUserLink(String text) {

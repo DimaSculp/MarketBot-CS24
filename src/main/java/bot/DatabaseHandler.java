@@ -5,11 +5,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import com.pengrad.telegrambot.model.Message;
 import io.github.cdimascio.dotenv.Dotenv;
 
 public class DatabaseHandler {
@@ -88,6 +84,22 @@ public class DatabaseHandler {
         }
         return 0;
     }
+    public boolean addAdToUser(long userId, String adLink) {
+        String updateAdSQL = "UPDATE public.users " +
+                "SET active_ads = array_append(active_ads, ?), " +
+                "    active_ads_count = active_ads_count + 1 " +
+                "WHERE user_id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(updateAdSQL)) {
+            statement.setString(1, adLink);
+            statement.setLong(2, userId);
+            int affectedRows = statement.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 
 
     public void close() {
