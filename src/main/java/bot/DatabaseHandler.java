@@ -70,10 +70,10 @@ public class DatabaseHandler {
         }
         return null;
     }
-    public  long findUserIdByUserlink(String userlink) {
+    public long findUserIdByUserlink(String userlink) {
         String query = "SELECT user_id FROM public.users WHERE user_link = ?";
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, userlink);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
@@ -84,6 +84,7 @@ public class DatabaseHandler {
         }
         return 0;
     }
+
     public boolean addAdToUser(long userId, String adLink) {
         String updateAdSQL = "UPDATE public.users " +
                 "SET active_ads = array_append(active_ads, ?), " +
