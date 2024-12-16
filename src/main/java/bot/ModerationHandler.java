@@ -68,7 +68,7 @@ public class ModerationHandler {
                         String messageLink = null;
                         if (repliedMessage.mediaGroupId() != null) {
                             List<String> photos = parseFileId(originalText);
-                            System.out.println("Собранные фотографии: " + photos);
+                            //System.out.println("Собранные фотографии: " + photos);
                             InputMediaPhoto[] media = new InputMediaPhoto[photos.size()];
                             for (int i = 0; i < photos.size(); i++) {
                                 media[i] = new InputMediaPhoto(photos.get(i));
@@ -110,8 +110,12 @@ public class ModerationHandler {
                         if (messageLink != null) {
                             System.out.println(databaseHandler.getConnection());
                             databaseHandler.addAdToUser(userId, messageLink);
-                            bot.execute(new SendMessage(userId, "Ваше объявление опубликовано!\nТеперь оно" +
-                                    " доступно по < a=href\"" + messageLink + "\">ссылке</a>").parseMode(ParseMode.HTML));
+                            System.out.println(userId);
+                            SendMessage sendMessage = new SendMessage(userId, "Ваше объявление опубликовано!\nТеперь оно" +
+                                    " доступно по <a href=\"" + messageLink + "\">ссылке</a>");
+                            sendMessage = sendMessage.parseMode(ParseMode.HTML);
+                            bot.execute(sendMessage);
+
                             System.out.println("Сообщение опубликовано. Ссылка: " + messageLink);
                         } else {
                             bot.execute(new SendMessage(userId, "Ваше объявление опубликовано, но не удалось получить ссылку."));
