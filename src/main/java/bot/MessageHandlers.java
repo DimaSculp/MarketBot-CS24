@@ -10,20 +10,20 @@ import java.util.Map;
 public class MessageHandlers {
     private final Map<String, BotCommands> commandMap;
     private final CallbackHandlers callbackHandlers;
-
     public MessageHandlers(DatabaseHandler databaseHandler, Map<String, BotCommands> commandMap, CallbackHandlers callbackHandlers) {
         this.commandMap = commandMap;
         this.callbackHandlers = callbackHandlers;
     }
-
-
-
     public void handleMessage(TelegramBot bot, Message message) {
         String chatId = message.chat().id().toString();
         String text = message.text();
         long userId = message.chat().id();
         String userLink = "https://t.me/" + message.from().username();
         if (callbackHandlers.hasActiveAd(userId)) {
+            callbackHandlers.handleMessage(bot, message);
+            return;
+        }
+        else if(callbackHandlers.hasActiveRemove(userId)) {
             callbackHandlers.handleMessage(bot, message);
             return;
         }

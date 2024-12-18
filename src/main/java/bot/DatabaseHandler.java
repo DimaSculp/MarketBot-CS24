@@ -5,6 +5,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
@@ -17,7 +19,7 @@ public class DatabaseHandler {
     private static final String USER = dotenv.get("USER_DB");
     private static final String PASSWORD = dotenv.get("PASSWORD_DB");
 
-    private Connection connection;
+    private static Connection connection;
 
     public Connection getConnection() {
         return connection;
@@ -101,7 +103,58 @@ public class DatabaseHandler {
         }
     }
 
+    public static List<String> getAdsByChatId(long chatId) {
+        List<String> ads = new ArrayList<>();
+        String query = "SELECT active_ads FROM public.users WHERE user_id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setLong(1, chatId);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                String[] activeAds = (String[]) resultSet.getArray("active_ads").getArray();
+                for (String ad : activeAds) {
+                    ads.add(ad);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return ads;
+    }
 
+    public void removeAdFromUser(long userId, int number) {
+        List<String> ads = getAdsByChatId(userId);
+        if (number < 1 || number > ads.size()) {
+            System.out.println("Ошибка: Неверный номер объявления.");
+            return;
+        }
+        ads.remove(number - 1);
+        String updateAdSQL = "UPDATE public.users " +
+                "SET active_ads = ? , active_ads_count = active_ads_count - 1 " +
+                "WHERE user_id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(updateAdSQL)) {
+            statement.setArray(1, connection.createArrayOf("text", ads.toArray()));
+            statement.setLong(2, userId);
+            statement.executeUpdate();
+            System.out.println("Объявление удалено успешно.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.out.println("Ошибка при удалении объявления.");
+        }
+    }
+    public String getUserLinkByChatId(long chatId) {
+        String userLink = null;
+        String query = "SELECT user_link FROM public.users WHERE user_id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setLong(1, chatId);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                userLink = resultSet.getString("user_link");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return userLink;
+    }
 
     public void close() {
         try {

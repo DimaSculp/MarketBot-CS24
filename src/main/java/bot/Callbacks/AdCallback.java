@@ -19,14 +19,20 @@ public class AdCallback implements BotCallbacks {
     private int price;
     private List<String> photos;
     private DatabaseHandler databaseHandler;
-
+    private boolean isSendCheckDone = true;
     public AdCallback(TelegramBot bot, DatabaseHandler databaseHandler, long chatId) {
         this.bot = bot;
         this.chatId = chatId;
         this.databaseHandler = databaseHandler;
         this.photos = new ArrayList<>();
     }
+    public boolean isSendCheckDone() {
+        return isSendCheckDone;
+    }
 
+    public void setSendCheckDone() {
+        this.isSendCheckDone = false;
+    }
     public String setTitle(String title) {
         if (title.length() <= 45) {
             this.title = title;
