@@ -32,7 +32,7 @@ public class ModerationHandler {
         this.databaseHandler = databaseHandler;
     }
 
-    private List<String> parseFileId(String text) {
+    protected List<String> parseFileId(String text) {
         List<String> fileIds = new ArrayList<>();
         if (text == null || text.isEmpty()) {
             return fileIds;
@@ -141,7 +141,7 @@ public class ModerationHandler {
 
 
 
-    private String extractUserLink(String text) {
+    protected String extractUserLink(String text) {
         System.out.println("Полученный текст: " + text);
         Pattern pattern = Pattern.compile("https://t.me/\\S+");
         Matcher matcher = pattern.matcher(text);
