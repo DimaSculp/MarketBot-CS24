@@ -2,6 +2,7 @@ package bot.Callbacks;
 
 import bot.DatabaseHandler;
 import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.model.Location;
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendMediaGroup;
 import com.pengrad.telegrambot.model.request.InputMediaPhoto;
@@ -19,6 +20,18 @@ public class AdCallback implements BotCallbacks {
     private int price;
     private List<String> photos;
     private DatabaseHandler databaseHandler;
+
+    private String geoLink;
+    private float latitude = 0;
+    private float longitude;
+    public void setGeo(float latitude, float longitude){
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+    public boolean checkGeo(){
+        return latitude == 0;
+    }
+
     private boolean isSendCheckDone = true;
     public AdCallback(TelegramBot bot, DatabaseHandler databaseHandler, long chatId) {
         this.bot = bot;
@@ -85,14 +98,26 @@ public class AdCallback implements BotCallbacks {
     public boolean isPhotosSet() {
             return photos.size() > 0 && photos.size() <= 10;
     }
+
+    private void createGeoLink(){
+        String link = "https://t.me/SculpTestShopBot?start=geo_";
+        String latitudeStr = String.format("%d_%06d", (int) latitude, (int) ((latitude - (int) latitude) * 1000000));
+        String longitudeStr = String.format("%d_%06d", (int) longitude, (int) ((longitude - (int) longitude) * 1000000));
+        geoLink = link + latitudeStr + "_" + longitudeStr;
+
+    }
     @Override
     public String getContent() {
         String userLink = databaseHandler.getUserById(chatId).getUserLink();
+        createGeoLink();
         StringBuilder content = new StringBuilder();
         content.append("<b>").append(title).append("</b>\n\n")
                 .append("<i>").append(description).append("</i>").append("\n\n")
-                .append("<b>Цена: </b>").append(price).append(" руб.\n\n")
-                .append("<b>").append(userLink.replace("https://t.me/", "")).append("</b>\n\n")
+                .append("<b>Цена: </b>").append(price).append(" руб.\n");
+        if(longitude != 0){
+            content.append("<a href=\"").append(geoLink).append(" \" >Место встречи</a>\n\n");
+        }
+                content.append("<b>").append(userLink.replace("https://t.me/", "")).append("</b>\n\n")
                 .append("<a href=\"").append(userLink).append(" \" >контакт продовца</a>\n")
                 .append("<a href=\"https://t.me/SculpTestShopBot\">разместить объявление</a>")
                 .append("~").append(photos);

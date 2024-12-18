@@ -32,4 +32,11 @@ public class Keyboards {
         return new InlineKeyboardMarkup(
                 new InlineKeyboardButton("Не создавать объявление").callbackData("stop_creating"));
     }
+
+    public static InlineKeyboardMarkup yesOrNoGeo() {
+        return new InlineKeyboardMarkup(
+                new InlineKeyboardButton("да✅").callbackData("yes_geo"),
+                new InlineKeyboardButton("нет❌").callbackData("no_geo")
+        );
+    }
 }

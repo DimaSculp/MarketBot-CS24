@@ -3,6 +3,7 @@ package bot;
 import bot.Commands.BotCommands;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
+import com.pengrad.telegrambot.model.Location;
 import com.pengrad.telegrambot.model.Update;
 import io.github.cdimascio.dotenv.Dotenv;
 
@@ -41,17 +42,18 @@ public class OurBot {
     }
 
     private static void handleUpdate(TelegramBot bot, Update update, Map<String, BotCommands> commandMap, MessageHandlers messageHandlers, CallbackHandlers callbackHandlers,  ModerationHandler moderationHandler) {
-        if (update.message() != null) {
-            System.out.println("Получено сообщение от чата ID: " + update.message().chat().id() +
-                    ". Текст сообщения: " + update.message().text());
-            messageHandlers.handleMessage(bot, update.message());
-        } else if (update.callbackQuery() != null) {
+        if (update.callbackQuery() != null) {
             System.out.println("Пользователь из чата ID: " + update.callbackQuery().from().id() +
                     " нажал на кнопку.");
             callbackHandlers.handleCallback(bot, update.callbackQuery(), commandMap);
         } else if (update.channelPost() != null) {
             System.out.println("Обнаружено сообщение в канале ID: " + update.channelPost().chat().id());
             moderationHandler.handleUpdate(update);
+        }else if ( update.message().location() != null || update.message() != null) {
+            System.out.println("Получено сообщение от чата ID: " + update.message().chat().id() +
+                    ". Текст сообщения: " + update.message());
+            messageHandlers.handleMessage(bot, update.message());
+        }
         }
     }
-}
+

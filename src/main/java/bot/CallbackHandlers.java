@@ -7,6 +7,7 @@ import bot.Commands.ProfileCommand;
 import bot.Commands.HelpCommand;
 import bot.Callbacks.RemoveAdCallback;
 import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.model.Location;
 import com.pengrad.telegrambot.request.AnswerCallbackQuery;
 import com.pengrad.telegrambot.model.CallbackQuery;
 import com.pengrad.telegrambot.model.Message;
@@ -83,6 +84,19 @@ public class CallbackHandlers {
                 bot.execute(sendMessage2);
                 bot.execute(answer);
                 break;
+            case "no_geo":
+                AdCallback adCallback = adCallbacks.get(chatId);
+                adCallback.setGeo((float) -0.1, 0);
+                SendMessage sendMessage3 = new SendMessage(chatId, "Хорошо, теперь отправьте фотографии одним сообщением (до 10 штук).");
+                sendMessage3.replyMarkup(Keyboards.stopCreatingAdd());
+                bot.execute(sendMessage3);
+                bot.execute(answer);
+                break;
+            case "yes_geo":
+                SendMessage sendMessage4 = new SendMessage(chatId, "Отправьте геопозицию в диалог" );
+                sendMessage4.replyMarkup(Keyboards.stopCreatingAdd());
+                bot.execute(sendMessage4);
+                bot.execute(answer);
             default:
                 break;
         }
@@ -91,6 +105,7 @@ public class CallbackHandlers {
     public void handleMessage(TelegramBot bot, Message message) {
         long chatId = message.chat().id();
         AdCallback adCallback = adCallbacks.get(chatId);
+        System.out.println(message);
         if (adCallback != null) {
             if (!adCallback.isTitleSet()) {
                 String result = adCallback.setTitle(message.text());
@@ -108,20 +123,37 @@ public class CallbackHandlers {
                     sendMessage.replyMarkup(Keyboards.stopCreatingAdd());
                     bot.execute(sendMessage);
                 }
-            } else if (!adCallback.isPriceSet()) {
+            }
+            else if (!adCallback.isPriceSet()) {
                 try {
                     int price = Integer.parseInt(message.text());
                     String result = adCallback.setPrice(price);
                     bot.execute(new SendMessage(chatId, result));
                     if (result.contains("успешно")) {
-                        SendMessage sendMessage = new SendMessage(chatId, "Теперь отправьте фотографии (до 10 штук).");
-                        sendMessage.replyMarkup(Keyboards.stopCreatingAdd());
+                        SendMessage sendMessage = new SendMessage(chatId, "Хотите чтобы в вашем объявлении было указанно удобное для Вас место встречи?");
+                        sendMessage.replyMarkup(Keyboards.yesOrNoGeo());
                         bot.execute(sendMessage);
                     }
                 } catch (NumberFormatException e) {
                     bot.execute(new SendMessage(chatId, "Ошибка: пожалуйста, укажите корректную цену (целое число)."));
                 }
-            } else if (message.photo() != null) {
+
+            } else if (adCallback.checkGeo()){
+                Location lc = message.location();
+                System.out.println(lc.latitude());
+                if(lc != null){
+                    adCallback.setGeo(message.location().latitude(), message.location().longitude());
+                    SendMessage sendMessage = new SendMessage(chatId, "Отлично! Геопозиция установлена.\nТеперь отправьте фотографии одним сообщением (до 10 штук).");
+                    sendMessage.replyMarkup(Keyboards.stopCreatingAdd());
+                    bot.execute(sendMessage);
+                }
+                else{
+                    SendMessage sendMessage = new SendMessage(chatId, "Отправьте геолокацию с помощью встроенной функции телеграм");
+                    sendMessage.replyMarkup(Keyboards.stopCreatingAdd());
+                    bot.execute(sendMessage);
+                }
+            }
+            else if (message.photo() != null) {
                     PhotoSize photo = message.photo()[message.photo().length - 1];
                     String fileId = photo.fileId();
                     adCallback.addPhoto(fileId);
