@@ -3,29 +3,26 @@ package bot.Callbacks;
 import bot.DatabaseHandler;
 import bot.User;
 import com.pengrad.telegrambot.TelegramBot;
-import com.pengrad.telegrambot.request.SendMessage;
-import com.pengrad.telegrambot.request.SendPhoto;
+import com.pengrad.telegrambot.request.SendMediaGroup;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AdCallbackTest {
     private TelegramBot mockBot;
-    private DatabaseHandler mockDatabaseHandler;
     private AdCallback adCallback;
-    private long chatId = 123456789;
 
     @BeforeEach
     void setUp() {
         mockBot = mock(TelegramBot.class);
-        mockDatabaseHandler = mock(DatabaseHandler.class);
+        DatabaseHandler mockDatabaseHandler = mock(DatabaseHandler.class);
         adCallback = new AdCallback(mockBot, mockDatabaseHandler, 123456789L);
-        when(mockDatabaseHandler.getUserById(anyLong())).thenReturn(new User(123456789L, "https://t.me/TestUser"));
+        User mockUser = mock(User.class);
+        when(mockUser.getUserLink()).thenReturn("https://t.me/test_user");
+        when(mockDatabaseHandler.getUserById(123456789L)).thenReturn(mockUser);
     }
 
     @Test
@@ -75,7 +72,7 @@ class AdCallbackTest {
     void addPhoto_valid() {
         String result = adCallback.addPhoto("photoFileId1");
         assertEquals("Фото успешно добавлено.", result);
-        assertFalse(adCallback.isPhotosSet());
+        assertTrue(adCallback.isPhotosSet());
     }
 
     @Test
@@ -89,47 +86,43 @@ class AdCallbackTest {
     }
 
     @Test
-    void getContent_valid() {
-        User mockUser = new User(123456789L, "https://t.me/TestUser");
+    void testGetContent() {
+        adCallback.setTitle("Моё объявление");
+        adCallback.setDescription("Описание объявления.");
+        adCallback.setPrice(1500);
+        adCallback.addPhoto("photoFileId1");
 
-        when(mockDatabaseHandler.getUserById(123456789L)).thenReturn(mockUser);
-
-        adCallback.setTitle("Пример объявления");
-        adCallback.setDescription("Пример описания");
-        adCallback.setPrice(3000);
+        String expectedContent = "<b>Моё объявление</b>\n\n" +
+                "<i>Описание объявления.</i>\n\n" +
+                "<b>Цена: </b>1500 руб.\n\n" +
+                "<b>test_user</b>\n\n" +
+                "<a href=\"https://t.me/test_user \" >контакт продовца</a>\n" +
+                "<a href=\"https://t.me/SculpTestShopBot\">разместить объявление</a>" +
+                "~[photoFileId1]";
 
         String content = adCallback.getContent();
-        assertTrue(content.contains("**Пример объявления**"), "Содержит заголовок");
-        assertTrue(content.contains("Пример описания"), "Содержит описание");
-        assertTrue(content.contains("3000 руб."), "Содержит цену");
-        assertTrue(content.contains("[Перейти к продавцу](https://t.me/TestUser)"), "Содержит ссылку на продавца");
+        assertEquals(expectedContent, content);
     }
 
     @Test
-    void sendAd_valid() {
-        adCallback.setTitle("Пример объявления");
-        adCallback.setDescription("Описание объявления");
-        adCallback.setPrice(2500);
+    void sendAd_test() {
+        adCallback.setTitle("Моё объявление");
+        adCallback.setDescription("Описание объявления.");
+        adCallback.setPrice(1500);
         adCallback.addPhoto("photoFileId1");
         adCallback.addPhoto("photoFileId2");
 
         adCallback.sendAd();
 
-        ArgumentCaptor<SendPhoto> sendPhotoCaptor = ArgumentCaptor.forClass(SendPhoto.class);
-        verify(mockBot, times(6)).execute(sendPhotoCaptor.capture());
-        List<SendPhoto> capturedPhotos = sendPhotoCaptor.getAllValues();
+        ArgumentCaptor<SendMediaGroup> captor = ArgumentCaptor.forClass(SendMediaGroup.class);
+        verify(mockBot).execute(captor.capture());
 
-        assertEquals(6, capturedPhotos.size());
-        assertEquals(chatId, capturedPhotos.get(0).getParameters().get("chat_id"));
-        assertEquals("photoFileId1", capturedPhotos.get(0).getParameters().get("photo"));
-        assertEquals(chatId, capturedPhotos.get(1).getParameters().get("chat_id"));
-        assertEquals("photoFileId2", capturedPhotos.get(1).getParameters().get("photo"));
+        SendMediaGroup sendMediaGroup = captor.getValue();
 
-        ArgumentCaptor<SendMessage> sendMessageCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(mockBot, times(6)).execute(sendMessageCaptor.capture());
-        SendMessage capturedMessage = sendMessageCaptor.getValue();
+        assertNotNull(sendMediaGroup);
 
-        assertEquals(-1002351079725L, capturedMessage.getParameters().get("chat_id"));
-        assertEquals(adCallback.getContent(), capturedMessage.getParameters().get("text"));
+        verify(mockBot).execute(any(SendMediaGroup.class));
+
+        assertTrue(adCallback.isSendCheckDone());
     }
 }

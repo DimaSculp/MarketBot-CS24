@@ -102,7 +102,7 @@ public class AdCallback implements BotCallbacks {
     public InlineKeyboardMarkup getKeyboard() {
         return null;
     }
-    private boolean isAdSent = false;
+    protected boolean isAdSent = false;
     public void sendAd() {
         if (isAdSent) {
             return;
@@ -124,4 +124,6 @@ public class AdCallback implements BotCallbacks {
             System.err.println("Ошибка при отправке медиа-группы в канал: " + e.getMessage());
         }
     }
+
+
 }
