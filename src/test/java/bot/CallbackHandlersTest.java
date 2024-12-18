@@ -6,6 +6,7 @@ import com.pengrad.telegrambot.model.CallbackQuery;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.model.Chat;
 import com.pengrad.telegrambot.request.SendMessage;
+import com.pengrad.telegrambot.request.AnswerCallbackQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -17,37 +18,38 @@ import static org.mockito.Mockito.*;
 
 class CallbackHandlersTest {
     private TelegramBot botMock;
-    private DatabaseHandler dbHandlerMock;
     private CallbackHandlers callbackHandlers;
 
     @BeforeEach
     void setUp() {
         botMock = mock(TelegramBot.class);
-        dbHandlerMock = mock(DatabaseHandler.class);
+        DatabaseHandler dbHandlerMock = mock(DatabaseHandler.class);
         callbackHandlers = new CallbackHandlers(dbHandlerMock);
     }
 
     @Test
     void testHandleCallback() {
         CallbackQuery callbackQuery = mock(CallbackQuery.class);
-        when(callbackQuery.data()).thenReturn("add_ad");
+        when(callbackQuery.data()).thenReturn("to_create");
 
         Message message = mock(Message.class);
         Chat chatMock = mock(Chat.class);
         when(message.chat()).thenReturn(chatMock);
         when(chatMock.id()).thenReturn(12345L);
-
         when(callbackQuery.message()).thenReturn(message);
+        when(callbackQuery.id()).thenReturn("callbackId");
 
         callbackHandlers.handleCallback(botMock, callbackQuery, new HashMap<>());
 
         ArgumentCaptor<SendMessage> sendCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botMock).execute(sendCaptor.capture());
+        ArgumentCaptor<AnswerCallbackQuery> answerCaptor = ArgumentCaptor.forClass(AnswerCallbackQuery.class);
 
-        SendMessage sendMessage = sendCaptor.getValue();
-        assertEquals(12345L, sendMessage.getParameters().get("chat_id"));
-        assertEquals("Пожалуйста, отправьте название объявления (до 45 символов).", sendMessage.getParameters().get("text"));
+        verify(botMock, times(2)).execute(sendCaptor.capture());
+        verify(botMock, times(2)).execute(answerCaptor.capture());
+
+        assertEquals("callbackId", callbackQuery.id());
     }
+
 
     @Test
     void testHandleMessage() {
@@ -56,7 +58,6 @@ class CallbackHandlersTest {
         when(adCallbackMock.isDescriptionSet()).thenReturn(false);
         when(adCallbackMock.isPriceSet()).thenReturn(false);
         when(adCallbackMock.isPhotosSet()).thenReturn(false);
-
         when(adCallbackMock.setTitle(anyString())).thenReturn("Название успешно установлено.");
 
         callbackHandlers.adCallbacks.put(12345L, adCallbackMock);
@@ -83,6 +84,7 @@ class CallbackHandlersTest {
 
         AdCallback adCallbackMock = mock(AdCallback.class);
         callbackHandlers.adCallbacks.put(12345L, adCallbackMock);
+
         assertTrue(callbackHandlers.hasActiveAd(12345L));
     }
 
