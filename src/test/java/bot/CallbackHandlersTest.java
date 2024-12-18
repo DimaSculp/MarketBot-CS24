@@ -81,10 +81,8 @@ class CallbackHandlersTest {
     @Test
     void testHasActiveAd() {
         assertFalse(callbackHandlers.hasActiveAd(12345L));
-
         AdCallback adCallbackMock = mock(AdCallback.class);
         callbackHandlers.adCallbacks.put(12345L, adCallbackMock);
-
         assertTrue(callbackHandlers.hasActiveAd(12345L));
     }
 
