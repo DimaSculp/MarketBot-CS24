@@ -2,7 +2,7 @@ package bot.Callbacks;
 
 import bot.DatabaseHandler;
 import com.pengrad.telegrambot.TelegramBot;
-import com.pengrad.telegrambot.model.Location;
+import bot.Api.YandexGeocoder;
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendMediaGroup;
 import com.pengrad.telegrambot.model.request.InputMediaPhoto;
@@ -20,7 +20,6 @@ public class AdCallback implements BotCallbacks {
     private int price;
     private List<String> photos;
     private DatabaseHandler databaseHandler;
-
     private String geoLink;
     private float latitude = 0;
     private float longitude;
@@ -110,12 +109,22 @@ public class AdCallback implements BotCallbacks {
     public String getContent() {
         String userLink = databaseHandler.getUserById(chatId).getUserLink();
         createGeoLink();
+        String address = YandexGeocoder.getAddress(latitude, longitude);
+        String[] addressParts = address.split(",\\s*");
+        if (addressParts.length >= 5) {
+            String city = addressParts[addressParts.length - 3];
+            String street = addressParts[addressParts.length - 2];
+            String houseNumber = addressParts[addressParts.length - 1];
+            address =  city + ", " + street + ", " + houseNumber;}
+
         StringBuilder content = new StringBuilder();
         content.append("<b>").append(title).append("</b>\n\n")
                 .append("<i>").append(description).append("</i>").append("\n\n")
-                .append("<b>Цена: </b>").append(price).append(" руб.\n");
+                .append("<b>Цена: </b>").append(price).append(" руб.\n")
+                .append("<b>Место: </b>");
         if(longitude != 0){
-            content.append("<a href=\"").append(geoLink).append(" \" >Место встречи</a>\n\n");
+            content.append("<a href=\"").append(geoLink).append(" \" >")
+                    .append("<i>").append(address).append("</i>").append("</a>\n\n");
         }
                 content.append("<b>").append(userLink.replace("https://t.me/", "")).append("</b>\n\n")
                 .append("<a href=\"").append(userLink).append(" \" >контакт продовца</a>\n")
