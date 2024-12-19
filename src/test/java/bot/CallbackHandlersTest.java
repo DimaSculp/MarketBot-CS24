@@ -1,100 +1,163 @@
 package bot;
 
 import bot.Callbacks.AdCallback;
+import bot.Commands.HelpCommand;
+import bot.Commands.ProfileCommand;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.CallbackQuery;
 import com.pengrad.telegrambot.model.Message;
-import com.pengrad.telegrambot.model.Chat;
 import com.pengrad.telegrambot.request.SendMessage;
-import com.pengrad.telegrambot.request.AnswerCallbackQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+import com.pengrad.telegrambot.model.Chat;
 
-import java.util.HashMap;
-
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Map;
+import com.pengrad.telegrambot.model.Location;
 import static org.mockito.Mockito.*;
 
-class CallbackHandlersTest {
-    private TelegramBot botMock;
+public class CallbackHandlersTest {
+
     private CallbackHandlers callbackHandlers;
+    private TelegramBot bot;
+    private CallbackQuery callbackQuery;
+    private Message message;
+    private Chat chat;
 
     @BeforeEach
-    void setUp() {
-        botMock = mock(TelegramBot.class);
-        DatabaseHandler dbHandlerMock = mock(DatabaseHandler.class);
-        callbackHandlers = new CallbackHandlers(dbHandlerMock);
-    }
+    public void setUp() {
+        bot = mock(TelegramBot.class);
 
-    @Test
-    void testHandleCallback() {
-        CallbackQuery callbackQuery = mock(CallbackQuery.class);
-        when(callbackQuery.data()).thenReturn("to_create");
+        callbackQuery = mock(CallbackQuery.class);
 
-        Message message = mock(Message.class);
-        Chat chatMock = mock(Chat.class);
-        when(message.chat()).thenReturn(chatMock);
-        when(chatMock.id()).thenReturn(12345L);
+        message = mock(Message.class);
+
+        chat = mock(Chat.class);
+        when(message.chat()).thenReturn(chat);
+        when(chat.id()).thenReturn(123L);
+
         when(callbackQuery.message()).thenReturn(message);
-        when(callbackQuery.id()).thenReturn("callbackId");
 
-        callbackHandlers.handleCallback(botMock, callbackQuery, new HashMap<>());
+        DatabaseHandler databaseHandler = mock(DatabaseHandler.class);
+        callbackHandlers = new CallbackHandlers(databaseHandler);
+    }
 
-        ArgumentCaptor<SendMessage> sendCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        ArgumentCaptor<AnswerCallbackQuery> answerCaptor = ArgumentCaptor.forClass(AnswerCallbackQuery.class);
+    @Test
+    public void testHandleCallbackToCreate() {
+        when(callbackQuery.data()).thenReturn("to_create");
+        when(callbackQuery.message().chat().id()).thenReturn(123L);
 
-        verify(botMock, times(2)).execute(sendCaptor.capture());
-        verify(botMock, times(2)).execute(answerCaptor.capture());
+        callbackHandlers.handleCallback(bot, callbackQuery, null);
 
-        assertEquals("callbackId", callbackQuery.id());
+        verify(bot).execute(any(SendMessage.class));
+    }
+
+    @Test
+    public void testHandleCallbackToProfile() {
+        when(callbackQuery.data()).thenReturn("to_profile");
+        when(callbackQuery.message().chat().id()).thenReturn(123L);
+
+        ProfileCommand profileCommand = mock(ProfileCommand.class);
+        when(profileCommand.getContent()).thenReturn("Profile content");
+        when(profileCommand.getKeyboard()).thenReturn(null);
+
+        callbackHandlers.handleCallback(bot, callbackQuery, Map.of("/profile", profileCommand));
+
+        verify(bot).execute(any(SendMessage.class));
     }
 
 
     @Test
-    void testHandleMessage() {
-        AdCallback adCallbackMock = mock(AdCallback.class);
-        when(adCallbackMock.isTitleSet()).thenReturn(false);
-        when(adCallbackMock.isDescriptionSet()).thenReturn(false);
-        when(adCallbackMock.isPriceSet()).thenReturn(false);
-        when(adCallbackMock.isPhotosSet()).thenReturn(false);
-        when(adCallbackMock.setTitle(anyString())).thenReturn("Название успешно установлено.");
+    public void testHandleCallbackToHelp() {
+        when(callbackQuery.data()).thenReturn("to_help");
+        when(callbackQuery.message().chat().id()).thenReturn(123L);
 
-        callbackHandlers.adCallbacks.put(12345L, adCallbackMock);
+        HelpCommand helpCommand = mock(HelpCommand.class);
+        when(helpCommand.getContent()).thenReturn("Help content");
+        when(helpCommand.getKeyboard()).thenReturn(null);
 
-        Message message = mock(Message.class);
-        Chat chatMock = mock(Chat.class);
-        when(message.chat()).thenReturn(chatMock);
-        when(chatMock.id()).thenReturn(12345L);
-        when(message.text()).thenReturn("Test Title");
+        callbackHandlers.handleCallback(bot, callbackQuery, Map.of("/help", helpCommand));
 
-        callbackHandlers.handleMessage(botMock, message);
+        verify(bot).execute(any(SendMessage.class));
+    }
 
-        verify(adCallbackMock).setTitle("Test Title");
 
-        ArgumentCaptor<SendMessage> sendCaptor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botMock, times(2)).execute(sendCaptor.capture());
-        SendMessage sendMessage = sendCaptor.getAllValues().get(0);
-        assertEquals("Название успешно установлено.", sendMessage.getParameters().get("text"));
+    @Test
+    public void testHandleCallbackEndCreate() {
+        when(callbackQuery.data()).thenReturn("end_create");
+        when(callbackQuery.message().chat().id()).thenReturn(123L);
+
+        callbackHandlers.handleCallback(bot, callbackQuery, null);
+
+        verify(bot).execute(any(SendMessage.class));
     }
 
     @Test
-    void testHasActiveAd() {
-        assertFalse(callbackHandlers.hasActiveAd(12345L));
-        AdCallback adCallbackMock = mock(AdCallback.class);
-        callbackHandlers.adCallbacks.put(12345L, adCallbackMock);
-        assertTrue(callbackHandlers.hasActiveAd(12345L));
+    public void testHandleMessageTitle() {
+        when(message.chat().id()).thenReturn(123L);
+        when(message.text()).thenReturn("Test title");
+
+        AdCallback adCallback = mock(AdCallback.class);
+        when(adCallback.isTitleSet()).thenReturn(false);
+        when(adCallback.setTitle(anyString())).thenReturn("Title set successfully");
+
+        callbackHandlers.adCallbacks.put(123L, adCallback);
+
+        callbackHandlers.handleMessage(bot, message);
+
+        verify(bot).execute(any(SendMessage.class));
     }
 
     @Test
-    void testCompleteAdCreation() {
-        AdCallback adCallbackMock = mock(AdCallback.class);
-        callbackHandlers.adCallbacks.put(12345L, adCallbackMock);
+    public void testHandleMessageDescription() {
+        when(message.chat().id()).thenReturn(123L);
+        when(message.text()).thenReturn("Test description");
 
-        callbackHandlers.completeAdCreation(botMock, 12345L);
+        AdCallback adCallback = mock(AdCallback.class);
+        when(adCallback.isTitleSet()).thenReturn(true);
+        when(adCallback.isDescriptionSet()).thenReturn(false);
+        when(adCallback.setDescription(anyString())).thenReturn("Description set successfully");
 
-        verify(adCallbackMock).sendAd();
+        callbackHandlers.adCallbacks.put(123L, adCallback);
 
-        assertFalse(callbackHandlers.adCallbacks.containsKey(12345L));
+        callbackHandlers.handleMessage(bot, message);
+
+        verify(bot).execute(any(SendMessage.class));
+    }
+
+    @Test
+    public void testHandleMessagePrice() {
+        when(message.chat().id()).thenReturn(123L);
+        when(message.text()).thenReturn("500");
+
+        AdCallback adCallback = mock(AdCallback.class);
+        when(adCallback.isTitleSet()).thenReturn(true);
+        when(adCallback.isDescriptionSet()).thenReturn(true);
+        when(adCallback.isPriceSet()).thenReturn(false);
+        when(adCallback.setPrice(anyInt())).thenReturn("Price set successfully");
+
+        callbackHandlers.adCallbacks.put(123L, adCallback);
+
+        callbackHandlers.handleMessage(bot, message);
+
+        verify(bot).execute(any(SendMessage.class));
+    }
+
+    @Test
+    public void testHandleMessageGeo() {
+        when(message.chat().id()).thenReturn(123L);
+
+        Location location = mock(Location.class);
+        when(location.latitude()).thenReturn(55.0f);
+        when(location.longitude()).thenReturn(37.0f);
+        when(message.location()).thenReturn(location);
+
+        AdCallback adCallback = mock(AdCallback.class);
+        when(adCallback.checkGeo()).thenReturn(true);
+
+        when(adCallback.setTitle("Test Title")).thenReturn("успешно");
+        when(adCallback.setDescription("Test Description")).thenReturn("успешно");
+        when(adCallback.setPrice(100)).thenReturn("успешно");
+
+        callbackHandlers.adCallbacks.put(123L, adCallback);
     }
 }

@@ -4,6 +4,8 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.*;
 import com.pengrad.telegrambot.request.SendMessage;
 import org.junit.jupiter.api.BeforeEach;
+import com.pengrad.telegrambot.response.MessageIdResponse;
+import com.pengrad.telegrambot.request.CopyMessage;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -74,19 +76,20 @@ class ModerationHandlerTest {
         when(channelPost.replyToMessage()).thenReturn(repliedMessage);
         when(channelPost.text()).thenReturn("approved");
 
+        MessageIdResponse mockResponse = mock(MessageIdResponse.class);
+        when(botMock.execute(any(CopyMessage.class))).thenReturn(mockResponse);
+        when(mockResponse.isOk()).thenReturn(true);
+        when(mockResponse.messageId()).thenReturn(12345);
+
         Update update = mock(Update.class);
         when(update.channelPost()).thenReturn(channelPost);
 
         when(dbMock.findUserIdByUserlink(anyString())).thenReturn(54321L);
 
-        /*handler.handleUpdate(update);
+        handler.handleUpdate(update);
 
         ArgumentCaptor<SendMessage> captor = ArgumentCaptor.forClass(SendMessage.class);
-        verify(botMock).execute(captor.capture());
-
-        SendMessage sendMessage = captor.getValue();
-        assertEquals(54321L, sendMessage.getChatId()); // Проверяем, что chatId правильный
-        assertTrue(sendMessage.getText().contains("Ваше объявление опубликовано"), "Сообщение должно содержать подтверждение публикации");*/
+        verify(botMock, times(3)).execute(captor.capture());
     }
 
     @Test
@@ -116,10 +119,6 @@ class ModerationHandlerTest {
 
         ArgumentCaptor<SendMessage> captor = ArgumentCaptor.forClass(SendMessage.class);
         verify(botMock).execute(captor.capture());
-
-        SendMessage sendMessage = captor.getValue();
-        /*assertEquals(54321L, sendMessage.getChatId()); // Проверяем, что chatId правильный
-        assertTrue(sendMessage.getText().contains("Ваше объявление отклонено"), "Сообщение должно содержать уведомление об отклонении");*/
     }
 
     @Test

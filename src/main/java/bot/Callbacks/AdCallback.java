@@ -27,6 +27,9 @@ public class AdCallback implements BotCallbacks {
         this.latitude = latitude;
         this.longitude = longitude;
     }
+    public String getGeoLink() {
+        return geoLink;
+    }
     public boolean checkGeo(){
         return latitude == 0;
     }
@@ -98,13 +101,13 @@ public class AdCallback implements BotCallbacks {
             return photos.size() > 0 && photos.size() <= 10;
     }
 
-    private void createGeoLink(){
+    protected void createGeoLink(){
         String link = "https://t.me/SculpTestShopBot?start=geo_";
         String latitudeStr = String.format("%d_%06d", (int) latitude, (int) ((latitude - (int) latitude) * 1000000));
         String longitudeStr = String.format("%d_%06d", (int) longitude, (int) ((longitude - (int) longitude) * 1000000));
         geoLink = link + latitudeStr + "_" + longitudeStr;
-
     }
+
     @Override
     public String getContent() {
         String userLink = databaseHandler.getUserById(chatId).getUserLink();
@@ -158,6 +161,4 @@ public class AdCallback implements BotCallbacks {
             System.err.println("Ошибка при отправке медиа-группы в канал: " + e.getMessage());
         }
     }
-
-
 }

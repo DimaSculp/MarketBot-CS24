@@ -15,7 +15,6 @@ import java.util.concurrent.Executors;
 public class OurBot {
 
     private static final Dotenv dotenv = Dotenv.configure()
-            .directory("C:/Users/asus/JavaProject/BotMarket_CS24")
             .load();
     private static final String BOT_TOKEN = dotenv.get("BOT_TOKEN");
     private static final String BOT_NAME = dotenv.get("BOT_NAME");

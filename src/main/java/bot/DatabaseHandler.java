@@ -13,7 +13,6 @@ import io.github.cdimascio.dotenv.Dotenv;
 public class DatabaseHandler {
 
     private static final Dotenv dotenv = Dotenv.configure()
-            .directory("C:/Users/asus/JavaProject/BotMarket_CS24")
             .load();
     private static final String URL = dotenv.get("URL_DB");
     private static final String USER = dotenv.get("USER_DB");
