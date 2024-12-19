@@ -86,7 +86,7 @@ class AdCallbackTest {
     }
 
     @Test
-    void testGetContent() {
+    void testGetContent_withoutGeo() {
         adCallback.setTitle("Моё объявление");
         adCallback.setDescription("Описание объявления.");
         adCallback.setPrice(1500);
@@ -94,7 +94,8 @@ class AdCallbackTest {
 
         String expectedContent = "<b>Моё объявление</b>\n\n" +
                 "<i>Описание объявления.</i>\n\n" +
-                "<b>Цена: </b>1500 руб.\n\n" +
+                "<b>Цена: </b>1500 руб.\n" +
+                "<b>Место: </b>" +
                 "<b>test_user</b>\n\n" +
                 "<a href=\"https://t.me/test_user \" >контакт продовца</a>\n" +
                 "<a href=\"https://t.me/SculpTestShopBot\">разместить объявление</a>" +
@@ -102,6 +103,27 @@ class AdCallbackTest {
 
         String content = adCallback.getContent();
         assertEquals(expectedContent, content);
+    }
+
+    @Test
+    void testGetContent_withGeo() {
+        adCallback.setTitle("Моё объявление");
+        adCallback.setDescription("Описание объявления.");
+        adCallback.setPrice(1500);
+        adCallback.addPhoto("photoFileId1");
+        adCallback.setGeo(55.7558f, 37.6176f);
+        String content = adCallback.getContent();
+        assertTrue(content.contains("https://t.me/SculpTestShopBot?start=geo_55_755798_37_617599"));
+        assertTrue(content.contains("Москва, проезд Воскресенские Ворота"));
+    }
+
+    @Test
+    void createGeoLink_test() {
+        adCallback.setGeo(55.7558f, 37.6176f);
+        adCallback.createGeoLink();
+        String geoLink = adCallback.getGeoLink();
+        String expectedGeoLink = "https://t.me/SculpTestShopBot?start=geo_55_755798_37_617599";
+        assertEquals(expectedGeoLink, geoLink);
     }
 
     @Test
