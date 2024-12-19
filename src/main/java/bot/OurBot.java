@@ -3,6 +3,7 @@ package bot;
 import bot.Commands.BotCommands;
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
+import com.pengrad.telegrambot.model.Location;
 import com.pengrad.telegrambot.model.Update;
 import io.github.cdimascio.dotenv.Dotenv;
 
@@ -31,23 +32,28 @@ public class OurBot {
         CommandInitializer.databaseHandler = databaseHandler;
         CallbackHandlers callbackHandlers = new CallbackHandlers(databaseHandler);
         MessageHandlers messageHandlers = new MessageHandlers(databaseHandler, commandMap, callbackHandlers);
+        ModerationHandler moderationHandler = new ModerationHandler(bot, databaseHandler);
         bot.setUpdatesListener(updates -> {
             updates.forEach(update -> {
-                CompletableFuture.runAsync(() -> handleUpdate(bot, update, commandMap, messageHandlers, callbackHandlers), executor);
+                CompletableFuture.runAsync(() -> handleUpdate(bot, update, commandMap, messageHandlers, callbackHandlers, moderationHandler), executor);
             });
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });
     }
 
-    private static void handleUpdate(TelegramBot bot, Update update, Map<String, BotCommands> commandMap, MessageHandlers messageHandlers, CallbackHandlers callbackHandlers) {
-        if (update.message() != null) {
-            System.out.println("Получено сообщение от чата ID: " + update.message().chat().id() +
-                    ". Текст сообщения: " + update.message().text());
-            messageHandlers.handleMessage(bot, update.message());
-        } else if (update.callbackQuery() != null) {
+    private static void handleUpdate(TelegramBot bot, Update update, Map<String, BotCommands> commandMap, MessageHandlers messageHandlers, CallbackHandlers callbackHandlers,  ModerationHandler moderationHandler) {
+        if (update.callbackQuery() != null) {
             System.out.println("Пользователь из чата ID: " + update.callbackQuery().from().id() +
                     " нажал на кнопку.");
             callbackHandlers.handleCallback(bot, update.callbackQuery(), commandMap);
+        } else if (update.channelPost() != null) {
+            System.out.println("Обнаружено сообщение в канале ID: " + update.channelPost().chat().id());
+            moderationHandler.handleUpdate(update);
+        }else if ( update.message().location() != null || update.message() != null) {
+            System.out.println("Получено сообщение от чата ID: " + update.message().chat().id() +
+                    ". Текст сообщения: " + update.message());
+            messageHandlers.handleMessage(bot, update.message());
+        }
         }
     }
-}
+

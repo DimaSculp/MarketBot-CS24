@@ -21,6 +21,10 @@ public class StartCommand implements BotCommands {
 
     @Override
     public String getContent() {
+        User existingUser = databaseHandler.getUserById(userId);
+        if (existingUser != null) {
+            return "Привет! Твой профиль уже существует. Ты можешь начать выкладывать объявления!";
+        }
         User newUser = new User(userId, userLink);
         databaseHandler.addUser(newUser);
         return "Привет! Твой профиль создан. Ты можешь начать выкладывать объявления!";

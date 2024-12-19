@@ -34,12 +34,25 @@
         <version>5.7.0</version>
         <scope>test</scope>
     </dependency>
-    <dependency>
+      <dependency>
+          <groupId>org.json</groupId>
+          <artifactId>json</artifactId>
+          <version>20210307</version>
+      </dependency>
+      <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>3.3.3</version>
         <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>com.vaadin.external.google</groupId>
+          <artifactId>android-json</artifactId>
+      </dependency>
+      <dependency>
+          <groupId>com.vaadin.external.google</groupId>
+          <artifactId>android-json</artifactId>
+      </dependency>
   </dependencies>
   <build>
     <plugins>
