@@ -2,7 +2,7 @@ package bot.Callbacks;
 
 import bot.DatabaseHandler;
 import com.pengrad.telegrambot.TelegramBot;
-import bot.Api.YandexGeocoder;
+import bot.YandexGeocoder;
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendMediaGroup;
 import com.pengrad.telegrambot.model.request.InputMediaPhoto;
