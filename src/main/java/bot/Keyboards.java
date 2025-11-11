@@ -6,26 +6,26 @@ import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
 public class Keyboards {
     public static InlineKeyboardMarkup getStartKeyboard() {
         return new InlineKeyboardMarkup(
-                new InlineKeyboardButton("\uD83C\uDD95Добавить объявление").callbackData("to_create")
+                new InlineKeyboardButton("🆕Добавить объявление").callbackData("to_create")
         ).addRow(
-                new InlineKeyboardButton("\uD83D\uDC64Мой профиль").callbackData("to_profile"),
-                new InlineKeyboardButton("\uD83D\uDCDCСписок команд").callbackData("to_help")
+                new InlineKeyboardButton("👤Мой профиль").callbackData("to_profile"),
+                new InlineKeyboardButton("📜Список команд").callbackData("to_help")
         );
     }
     public static InlineKeyboardMarkup getToMenuKeyboard() {
         return new InlineKeyboardMarkup(
-                new InlineKeyboardButton("\uD83C\uDD95Добавить объявление").callbackData("to_create")
+                new InlineKeyboardButton("🆕Добавить объявление").callbackData("to_create")
         ).addRow(
-                new InlineKeyboardButton("\uD83D\uDDC2\uFE0FМои объявления").callbackData("to_ads"),
-                new InlineKeyboardButton("\uD83D\uDCDCСписок команд").callbackData("to_help")
+                new InlineKeyboardButton("🗃️Мои объявления").callbackData("to_ads"),
+                new InlineKeyboardButton("📜Список команд").callbackData("to_help")
         );
     }
     public static InlineKeyboardMarkup getToEditAddsKeyboard() {
         return new InlineKeyboardMarkup(
                 new InlineKeyboardButton("❌Снять объявление").callbackData("remove_ads")
         ).addRow(
-                new InlineKeyboardButton("\uD83D\uDC64Мой профиль").callbackData("to_profile"),
-                new InlineKeyboardButton("\uD83C\uDD95Добавить объявление").callbackData("to_create")
+                new InlineKeyboardButton("👤Мой профиль").callbackData("to_profile"),
+                new InlineKeyboardButton("🆕Добавить объявление").callbackData("to_create")
         );
     }
     public static InlineKeyboardMarkup stopCreatingAdd() {
@@ -37,6 +37,13 @@ public class Keyboards {
         return new InlineKeyboardMarkup(
                 new InlineKeyboardButton("да✅").callbackData("yes_geo"),
                 new InlineKeyboardButton("нет❌").callbackData("no_geo")
+        );
+    }
+
+    public static InlineKeyboardMarkup removeAdChoice(int adNumber) { // NEW
+        return new InlineKeyboardMarkup(
+                new InlineKeyboardButton("Продано! ✅").callbackData("sold_ad_" + adNumber),
+                new InlineKeyboardButton("Не продано ❌").callbackData("unsold_ad_" + adNumber)
         );
     }
 }

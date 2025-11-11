@@ -20,23 +20,56 @@ import com.pengrad.telegrambot.request.SendMessage;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List; // ВАЖНО: Убедитесь, что этот импорт присутствует
 
 public class CallbackHandlers {
     private static DatabaseHandler databaseHandler;
     protected Map<Long, AdCallback> adCallbacks = new HashMap<>();
     protected Map<Long, RemoveAdCallback> removeAd = new HashMap<>();
+    protected Map<Long, Integer> adToRemovePrice = new HashMap<>(); // Хранение цены удаляемого объявления
+
     public CallbackHandlers(DatabaseHandler databaseHandler) {
         this.databaseHandler = databaseHandler;
     }
+
     public void handleCallback(TelegramBot bot, CallbackQuery callbackQuery, Map<String, BotCommands> commandMap) {
         String callbackData = callbackQuery.data();
         long chatId = callbackQuery.message().chat().id();
         AnswerCallbackQuery answer = new AnswerCallbackQuery(callbackQuery.id())
                 .showAlert(false);
+
+        if (callbackData.startsWith("sold_ad_") || callbackData.startsWith("unsold_ad_")) {
+            int adNumber = Integer.parseInt(callbackData.split("_")[2]);
+            boolean sold = callbackData.startsWith("sold_ad_");
+            int price = adToRemovePrice.getOrDefault(chatId, 0);
+
+            RemoveAdCallback removeAdCallback = removeAd.get(chatId);
+            if (removeAdCallback != null) {
+                removeAdCallback.removeAd(chatId, adNumber, bot);
+
+                if (sold && price > 0) {
+                    databaseHandler.addEarnings(chatId, price);
+                    bot.execute(new SendMessage(chatId, "Объявление под номером " + adNumber + " снято с публикации. Цена " + price + " руб. добавлена к вашему заработку."));
+                } else {
+                    bot.execute(new SendMessage(chatId, "Объявление под номером " + adNumber + " снято с публикации."));
+                }
+
+                removeAd.remove(chatId);
+                adToRemovePrice.remove(chatId);
+
+                // Отправляем меню обратно
+                SendMessage menuMessage = new SendMessage(chatId, "Выберите действие:");
+                menuMessage.replyMarkup(Keyboards.getToMenuKeyboard());
+                bot.execute(menuMessage);
+            }
+            bot.execute(answer);
+            return;
+        }
+
         switch (callbackData) {
             case "to_create":
                 adCallbacks.put(chatId, new AdCallback(bot, databaseHandler, chatId));
-                SendMessage sendMessage =new SendMessage(chatId, "Пожалуйста, отправьте название объявления (до 45 символов).");
+                SendMessage sendMessage = new SendMessage(chatId, "Пожалуйста, отправьте название объявления (до 45 символов).");
                 sendMessage.replyMarkup(Keyboards.stopCreatingAdd());
                 bot.execute(sendMessage);
                 bot.execute(answer);
@@ -93,10 +126,11 @@ public class CallbackHandlers {
                 bot.execute(answer);
                 break;
             case "yes_geo":
-                SendMessage sendMessage4 = new SendMessage(chatId, "Отправьте геопозицию в диалог" );
+                SendMessage sendMessage4 = new SendMessage(chatId, "Отправьте геопозицию в диалог");
                 sendMessage4.replyMarkup(Keyboards.stopCreatingAdd());
                 bot.execute(sendMessage4);
                 bot.execute(answer);
+                break;
             default:
                 break;
         }
@@ -106,11 +140,12 @@ public class CallbackHandlers {
         long chatId = message.chat().id();
         AdCallback adCallback = adCallbacks.get(chatId);
         System.out.println(message);
+
         if (adCallback != null) {
             if (!adCallback.isTitleSet()) {
                 String result = adCallback.setTitle(message.text());
                 bot.execute(new SendMessage(chatId, result));
-                if (result.contains("успешно")){
+                if (result.contains("успешно")) {
                     SendMessage sendMessage = new SendMessage(chatId, "Отправьте описание объявления (до 700 символов).");
                     sendMessage.replyMarkup(Keyboards.stopCreatingAdd());
                     bot.execute(sendMessage);
@@ -123,8 +158,7 @@ public class CallbackHandlers {
                     sendMessage.replyMarkup(Keyboards.stopCreatingAdd());
                     bot.execute(sendMessage);
                 }
-            }
-            else if (!adCallback.isPriceSet()) {
+            } else if (!adCallback.isPriceSet()) {
                 try {
                     int price = Integer.parseInt(message.text());
                     String result = adCallback.setPrice(price);
@@ -137,79 +171,88 @@ public class CallbackHandlers {
                 } catch (NumberFormatException e) {
                     bot.execute(new SendMessage(chatId, "Ошибка: пожалуйста, укажите корректную цену (целое число)."));
                 }
-
-            } else if (adCallback.checkGeo()){
+            } else if (adCallback.checkGeo()) {
                 Location lc = message.location();
-                System.out.println(lc.latitude());
-                if(lc != null){
-                    adCallback.setGeo(message.location().latitude(), message.location().longitude());
+                System.out.println(lc != null ? lc.latitude() : "Location is null");
+                if (lc != null) {
+                    adCallback.setGeo(lc.latitude(), lc.longitude());
                     SendMessage sendMessage = new SendMessage(chatId, "Отлично! Геопозиция установлена.\nТеперь отправьте фотографии одним сообщением (до 10 штук).");
                     sendMessage.replyMarkup(Keyboards.stopCreatingAdd());
                     bot.execute(sendMessage);
-                }
-                else{
+                } else {
                     SendMessage sendMessage = new SendMessage(chatId, "Отправьте геолокацию с помощью встроенной функции телеграм");
                     sendMessage.replyMarkup(Keyboards.stopCreatingAdd());
                     bot.execute(sendMessage);
                 }
-            }
-            else if (message.photo() != null) {
-                    PhotoSize photo = message.photo()[message.photo().length - 1];
-                    String fileId = photo.fileId();
-                    adCallback.addPhoto(fileId);
+            } else if (message.photo() != null) {
+                PhotoSize photo = message.photo()[message.photo().length - 1];
+                String fileId = photo.fileId();
+                adCallback.addPhoto(fileId);
                 if (adCallback.isPhotosSet() && adCallback.isSendCheckDone()) {
                     adCallback.setSendCheckDone();
                     sendCheck(bot, chatId, adCallback);
                 }
             }
         }
+
         else {
-            String number = message.text();
+            String numberText = message.text();
             RemoveAdCallback removeAdCallback = removeAd.get(chatId);
-            int size = (databaseHandler.getAdsByChatId(chatId)).size();
-            if (size == 0) {
-                SendMessage sendMessage = new SendMessage(chatId, "У вас нет активных объявлений для удаления.");
-                sendMessage.replyMarkup(removeAdCallback.getKeyboard());
-                bot.execute(sendMessage);
-                removeAd.remove(chatId);
-            } else {
-                try {
-                    int parsedNumber = Integer.parseInt(number);
-                    if (parsedNumber >= 1 && parsedNumber <= size) {
-                        SendMessage sendMessage = new SendMessage(chatId, "Объявление под номером " + parsedNumber + " снято с публикации.");
-                        sendMessage.replyMarkup(removeAdCallback.getKeyboard());
-                        bot.execute(sendMessage);
-                        removeAdCallback.removeAd(chatId, parsedNumber, bot);
-                        removeAd.remove(chatId);
-                    } else {
-                        bot.execute(new SendMessage(chatId, "Ошибка: пожалуйста, введите число от 1 до " + size));
+
+            if (removeAdCallback != null) {
+                List<String> userAds = databaseHandler.getAdsByChatId(chatId);
+                int size = userAds.size();
+
+                if (size == 0) {
+                    SendMessage sendMessage = new SendMessage(chatId, "У вас нет активных объявлений для удаления.");
+                    sendMessage.replyMarkup(Keyboards.getToMenuKeyboard());
+                    bot.execute(sendMessage);
+                    removeAd.remove(chatId);
+                } else {
+                    try {
+                        int parsedNumber = Integer.parseInt(numberText);
+                        if (parsedNumber >= 1 && parsedNumber <= size) {
+                            int price = databaseHandler.getAdPrice(chatId, parsedNumber);
+                            adToRemovePrice.put(chatId, price);
+
+                            SendMessage sendMessage = new SendMessage(chatId,
+                                    "Вы уверены, что хотите снять объявление под номером " + parsedNumber + " с публикации?\n" +
+                                            (price > 0 ? "Если товар был продан, вы можете добавить его стоимость (" + price + " руб.) к своему заработку." : ""));
+                            sendMessage.replyMarkup(Keyboards.removeAdChoice(parsedNumber));
+                            bot.execute(sendMessage);
+                        } else {
+                            bot.execute(new SendMessage(chatId, "Ошибка: пожалуйста, введите число от 1 до " + size));
+                        }
+                    } catch (NumberFormatException e) {
+                        bot.execute(new SendMessage(chatId, "Ошибка: пожалуйста, отправьте целое число."));
                     }
-                } catch (NumberFormatException e) {
-                    bot.execute(new SendMessage(chatId, "Ошибка: пожалуйста, отправьте целое число."));
                 }
             }
         }
     }
-    private void sendCheck(TelegramBot bot,long chatId, AdCallback adCallback){
-        //System.out.println("tyt" );
+
+    private void sendCheck(TelegramBot bot, long chatId, AdCallback adCallback) {
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        SendMessage message = new SendMessage(chatId, "Вы добавили " + adCallback.countPhoto() +  " фотографий");
+        SendMessage message = new SendMessage(chatId, "Вы добавили " + adCallback.countPhoto() + " фотографий");
         Keyboard keyB = new InlineKeyboardMarkup(
                 new InlineKeyboardButton("Завершить создание✅").callbackData("end_create")
         ).addRow(new InlineKeyboardButton("Не создавть❌").callbackData("stop_creating"));
         message.replyMarkup(keyB);
         bot.execute(message);
     }
+
     public boolean hasActiveAd(long chatId) {
         return adCallbacks.containsKey(chatId);
     }
-    public boolean hasActiveRemove(long chatId){
+
+    public boolean hasActiveRemove(long chatId) {
         return removeAd.containsKey(chatId);
     }
+
     protected void completeAdCreation(TelegramBot bot, long chatId) {
         AdCallback adCallback = adCallbacks.get(chatId);
         if (adCallback != null) {

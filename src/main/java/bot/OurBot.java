@@ -33,15 +33,17 @@ public class OurBot {
         CallbackHandlers callbackHandlers = new CallbackHandlers(databaseHandler);
         MessageHandlers messageHandlers = new MessageHandlers(databaseHandler, commandMap, callbackHandlers);
         ModerationHandler moderationHandler = new ModerationHandler(bot, databaseHandler);
+        AdminChannelHandler adminChannelHandler = new AdminChannelHandler(bot, databaseHandler); // NEW
+
         bot.setUpdatesListener(updates -> {
             updates.forEach(update -> {
-                CompletableFuture.runAsync(() -> handleUpdate(bot, update, commandMap, messageHandlers, callbackHandlers, moderationHandler), executor);
+                CompletableFuture.runAsync(() -> handleUpdate(bot, update, commandMap, messageHandlers, callbackHandlers, moderationHandler, adminChannelHandler), executor); // UPDATED
             });
             return UpdatesListener.CONFIRMED_UPDATES_ALL;
         });
     }
 
-    private static void handleUpdate(TelegramBot bot, Update update, Map<String, BotCommands> commandMap, MessageHandlers messageHandlers, CallbackHandlers callbackHandlers,  ModerationHandler moderationHandler) {
+    private static void handleUpdate(TelegramBot bot, Update update, Map<String, BotCommands> commandMap, MessageHandlers messageHandlers, CallbackHandlers callbackHandlers,  ModerationHandler moderationHandler, AdminChannelHandler adminChannelHandler) { // UPDATED
         if (update.callbackQuery() != null) {
             System.out.println("Пользователь из чата ID: " + update.callbackQuery().from().id() +
                     " нажал на кнопку.");
@@ -49,11 +51,11 @@ public class OurBot {
         } else if (update.channelPost() != null) {
             System.out.println("Обнаружено сообщение в канале ID: " + update.channelPost().chat().id());
             moderationHandler.handleUpdate(update);
-        }else if ( update.message().location() != null || update.message() != null) {
+            adminChannelHandler.handleChannelPost(update.channelPost()); // NEW
+        }else if (update.message() != null) { // Упрощенная проверка
             System.out.println("Получено сообщение от чата ID: " + update.message().chat().id() +
                     ". Текст сообщения: " + update.message());
             messageHandlers.handleMessage(bot, update.message());
         }
-        }
     }
-
+}

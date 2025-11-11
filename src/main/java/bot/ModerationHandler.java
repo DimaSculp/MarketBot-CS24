@@ -1,6 +1,5 @@
 package bot;
 
-
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Message;
 import com.pengrad.telegrambot.request.CopyMessage;
@@ -9,10 +8,10 @@ import com.pengrad.telegrambot.model.Update;
 import com.pengrad.telegrambot.response.MessageIdResponse;
 import com.pengrad.telegrambot.response.MessagesResponse;
 
-
 import com.pengrad.telegrambot.model.request.InputMediaPhoto;
 import com.pengrad.telegrambot.model.request.ParseMode;
 import com.pengrad.telegrambot.request.SendMessage;
+import com.pengrad.telegrambot.response.SendResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +19,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-
 public class ModerationHandler {
     private final TelegramBot bot;
     private final DatabaseHandler databaseHandler;
-    private static final String TARGET_CHANNEL_USERNAME = "OutFix_Market"; //KB2024CHANNEL
-    private static final long TARGET_CHANNEL_ID = -1003223929393L; //-1002397946078L;
+    private static final String TARGET_CHANNEL_USERNAME = "OutFix_Market"; // Имя канала без @
+    private static final long TARGET_CHANNEL_ID = -1003223929393L; // ID канала для размещения
 
     public ModerationHandler(TelegramBot bot, DatabaseHandler databaseHandler) {
         this.bot = bot;
@@ -34,23 +32,14 @@ public class ModerationHandler {
 
     protected List<String> parseFileId(String text) {
         List<String> fileIds = new ArrayList<>();
-        if (text == null || text.isEmpty()) {
-            return fileIds;
-        }
-        int tildeIndex = text.indexOf("~");
-        if (tildeIndex == -1) {
-            return fileIds;
-        }
-        String fileIdPart = text.substring(tildeIndex + 1).trim();
-        if (fileIdPart.startsWith("[") && fileIdPart.endsWith("]")) {
-            fileIdPart = fileIdPart.substring(1, fileIdPart.length() - 1);
-            String[] ids = fileIdPart.split(",");
-            for (String id : ids) {
-                fileIds.add(id.trim());
-            }
+        Pattern pattern = Pattern.compile("~\\[(.*?)\\]");
+        Matcher matcher = pattern.matcher(text);
+        while (matcher.find()) {
+            fileIds.add(matcher.group(1));
         }
         return fileIds;
     }
+
     public void handleUpdate(Update update) {
         if (update.channelPost() != null) {
             Message channelPost = update.channelPost();
@@ -58,61 +47,50 @@ public class ModerationHandler {
                 Message repliedMessage = channelPost.replyToMessage();
                 String replyText = channelPost.text();
                 String originalText = repliedMessage.caption();
-                //System.out.println("Проверенное объявление: " + originalText);
-                //System.out.println("Текст ответа: " + replyText);
+                System.out.println("Получено сообщение в канале модерации, ответ: " + replyText);
+
                 if (replyText != null) {
                     String userLink = extractUserLink(originalText);
                     long userId = databaseHandler.findUserIdByUserlink(userLink);
+
                     if (replyText.equalsIgnoreCase("approved")) {
                         String originalTextTrimmed = originalText.substring(0, originalText.indexOf('~')).trim();
                         String messageLink = null;
-                        if (repliedMessage.mediaGroupId() != null) {
-                            List<String> photos = parseFileId(originalText);
-                            //System.out.println("Собранные фотографии: " + photos);
-                            InputMediaPhoto[] media = new InputMediaPhoto[photos.size()];
-                            for (int i = 0; i < photos.size(); i++) {
-                                media[i] = new InputMediaPhoto(photos.get(i));
+
+                        List<String> fileIds = parseFileId(originalText);
+
+                        if (!fileIds.isEmpty()) {
+                            List<InputMediaPhoto> media = new ArrayList<>();
+                            for (int i = 0; i < fileIds.size(); i++) {
+                                InputMediaPhoto photo = new InputMediaPhoto(fileIds.get(i));
                                 if (i == 0) {
-                                    media[i].caption(originalTextTrimmed).parseMode(ParseMode.HTML);
+                                    photo.caption(originalTextTrimmed);
+                                    photo.parseMode(ParseMode.HTML);
                                 }
+                                media.add(photo);
                             }
-                            SendMediaGroup sendMediaGroup = new SendMediaGroup(TARGET_CHANNEL_ID, media);
-                            MessagesResponse response = bot.execute(sendMediaGroup);
-                            if (response.isOk()) {
-                                Message[] sentMessage = response.messages();
-                                int messageId = sentMessage[0].messageId();
-                                messageLink = "https://t.me/" + TARGET_CHANNEL_USERNAME + "/" + messageId;
-                                System.out.println("Ссылка на сообщение: " + messageLink);
+                            MessagesResponse response = bot.execute(new SendMediaGroup(TARGET_CHANNEL_ID, media.toArray(new InputMediaPhoto[0])));
+
+                            if (response.isOk() && response.messages().length > 0) {
+                                int messageId = response.messages()[0].messageId();
+                                messageLink = String.format("https://t.me/%s/%d", TARGET_CHANNEL_USERNAME, messageId);
                             }
-                            bot.execute(new SendMediaGroup(userId, media));
                         } else {
-                            CopyMessage copyToChannel = new CopyMessage(
-                                    TARGET_CHANNEL_ID,
-                                    repliedMessage.chat().id(),
-                                    repliedMessage.messageId()
-                            ).parseMode(ParseMode.HTML).caption(originalTextTrimmed);
+                            SendResponse response = bot.execute(new SendMessage(TARGET_CHANNEL_ID, originalTextTrimmed)
+                                    .parseMode(ParseMode.HTML));
 
-                            MessageIdResponse response = bot.execute(copyToChannel);
                             if (response.isOk()) {
-                                int messageId = response.messageId();
-                                messageLink = "https://t.me/" + TARGET_CHANNEL_USERNAME + "/" + messageId;
-                                System.out.println("Ссылка на сообщение: " + messageLink);
+                                int messageId = response.message().messageId();
+                                messageLink = String.format("https://t.me/%s/%d", TARGET_CHANNEL_USERNAME, messageId);
                             }
-
-                            CopyMessage copyToUser = new CopyMessage(
-                                    userId,
-                                    repliedMessage.chat().id(),
-                                    repliedMessage.messageId()
-                            ).parseMode(ParseMode.HTML).caption(originalTextTrimmed);
-                            bot.execute(copyToUser);
                         }
 
                         if (messageLink != null) {
-                            System.out.println(databaseHandler.getConnection());
-                            databaseHandler.addAdToUser(userId, messageLink);
-                            System.out.println(userId);
-                            SendMessage sendMessage = new SendMessage(userId, "Ваше объявление опубликовано!\nТеперь оно" +
-                                    " доступно по <a href=\"" + messageLink + "\">ссылке</a>");
+                            databaseHandler.addAdToUser(userId, originalTextTrimmed);
+
+                            SendMessage sendMessage = new SendMessage(userId,
+                                    "Ваше объявление опубликовано в канале t.me/OutFix_Market!\n" +
+                                            "Теперь оно доступно по <a href=\"" + messageLink + "\">ссылке</a>");
                             sendMessage = sendMessage.parseMode(ParseMode.HTML);
                             bot.execute(sendMessage);
 
@@ -122,16 +100,11 @@ public class ModerationHandler {
                             System.out.println("Сообщение опубликовано, но ссылка не получена.");
                         }
                     } else {
-                        System.out.println(userLink);
-                        if (userLink != null) {
-                            if (userId != 0) {
-                                bot.execute(new SendMessage(userId, "Ваше объявление отклонено.\nПричина: " + replyText));
-                                System.out.println("Пользователь уведомлен.");
-                            } else {
-                                System.out.println("Пользователь с userlink " + userLink + " не найден в базе данных.");
-                            }
+                        if (userLink != null && userId != 0) {
+                            bot.execute(new SendMessage(userId, "Ваше объявление отклонено.\nПричина: " + replyText));
+                            System.out.println("Пользователь уведомлен об отклонении.");
                         } else {
-                            System.out.println("Userlink не найден в тексте сообщения.");
+                            System.out.println("Не удалось уведомить пользователя об отклонении. userlink: " + userLink + ", userId: " + userId);
                         }
                     }
                 }
@@ -140,18 +113,25 @@ public class ModerationHandler {
     }
 
 
-
     protected String extractUserLink(String text) {
         System.out.println("Полученный текст: " + text);
+
         Pattern pattern = Pattern.compile("https://t.me/\\S+");
         Matcher matcher = pattern.matcher(text);
-        if (matcher.find()) {
-            String found = matcher.group();
-            System.out.println("Найдена ссылка: " + found);
-            return found;
+
+        String lastFoundLink = null;
+        while (matcher.find()) {
+            lastFoundLink = matcher.group();
         }
 
-        System.out.println("Ссылка не найдена.");
+
+        if (lastFoundLink != null && !lastFoundLink.contains("geo_")) {
+            System.out.println("Найдена ссылка: " + lastFoundLink);
+            return lastFoundLink;
+        }
+
+
+        System.out.println("Ссылка пользователя не найдена.");
         return null;
     }
 

@@ -5,8 +5,11 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
@@ -154,6 +157,54 @@ public class DatabaseHandler {
             e.printStackTrace();
         }
         return userLink;
+    }
+
+    public List<Long> getAllUserIds() {
+        List<Long> userIds = new ArrayList<>();
+        String query = "SELECT user_id FROM public.users";
+        try (PreparedStatement statement = connection.prepareStatement(query);
+             ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                userIds.add(resultSet.getLong("user_id"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return userIds;
+    }
+
+    public void addEarnings(long userId, int amount) {
+        String updateEarningsSQL = "UPDATE public.users " +
+                "SET earned_money = earned_money + ? " +
+                "WHERE user_id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(updateEarningsSQL)) {
+            statement.setInt(1, amount);
+            statement.setLong(2, userId);
+            statement.executeUpdate();
+            System.out.println("Добавлено " + amount + " к заработку пользователя " + userId);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int getAdPrice(long userId, int adNumber) {
+        List<String> ads = getAdsByChatId(userId);
+        if (adNumber > 0 && adNumber <= ads.size()) {
+            String adString = ads.get(adNumber - 1);
+
+            Pattern pattern = Pattern.compile("Цена:\\s*(\\d+)\\s*руб\\.", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+            Matcher matcher = pattern.matcher(adString);
+
+            if (matcher.find()) {
+                try {
+                    String priceStr = matcher.group(1);
+                    return Integer.parseInt(priceStr);
+                } catch (NumberFormatException e) {
+                    System.out.println("Ошибка при парсинге цены из объявления: " + e.getMessage());
+                }
+            }
+        }
+        return 0;
     }
 
     public void close() {
