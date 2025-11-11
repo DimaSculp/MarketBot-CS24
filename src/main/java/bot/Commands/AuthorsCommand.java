@@ -6,12 +6,12 @@ import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
 public class AuthorsCommand implements BotCommands{
         @Override
         public String getDescription() {
-            return "Авторы проекта";
+            return "Автор проекта";
         }
 
         @Override
         public String getContent() {
-            return "Бота создали Бабенко Андрей (@minofprop) и Кухтей Дмитрий (@sculp2ra). Спасибо за интерес!";
+            return "бот написан фиксером @sculp2ra";
         }
 
         @Override

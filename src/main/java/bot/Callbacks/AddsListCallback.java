@@ -17,7 +17,7 @@ public class AddsListCallback implements BotCallbacks{
     @Override
     public String getContent() {
         StringBuilder content = new StringBuilder();
-        content.append("<a href=\"https://t.me/KB2024CHANNEL\">МАРКЕТ</a>\n\n");
+        content.append("<a href=\"https://t.me/OutFix_Market\">МАРКЕТ</a>\n\n");
         content.append("<b>Ваши объявления:</b>\n\n");
         if (adds != null && !adds.isEmpty()) {
             for (int i = 0; i < adds.size(); i++) {

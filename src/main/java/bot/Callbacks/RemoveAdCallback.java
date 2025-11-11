@@ -29,7 +29,7 @@ public class RemoveAdCallback implements BotCallbacks{
         StringBuilder content = new StringBuilder();
         String userLink = db.getUserLinkByChatId(chatId);
         content.append("<b><i>SOLD SOLD SOLD</i></b>\n\n").append("<a href=\"").append(userLink).
-                append(" \" >ПРОДАВЕЦ</a>\n").append("<a href=\"https://t.me/KB2024CHANNEL\">МАРКЕТ</a>\n\n");
+                append(" \" >ПРОДАВЕЦ</a>\n").append("<a href=\"https://t.me/OutFix_Market\">МАРКЕТ</a>\n\n");
         EditMessageCaption editMessageText = new EditMessageCaption(TARGET_CHANNEL_ID, postMessageId);
         editMessageText.caption(content.toString());
         editMessageText.parseMode(ParseMode.HTML);

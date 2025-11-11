@@ -24,8 +24,8 @@ import java.util.regex.Pattern;
 public class ModerationHandler {
     private final TelegramBot bot;
     private final DatabaseHandler databaseHandler;
-    private static final String TARGET_CHANNEL_USERNAME = "KB2024CHANNEL";
-    private static final long TARGET_CHANNEL_ID = -1002397946078L;
+    private static final String TARGET_CHANNEL_USERNAME = "OutFix_Market"; //KB2024CHANNEL
+    private static final long TARGET_CHANNEL_ID = -1003223929393L; //-1002397946078L;
 
     public ModerationHandler(TelegramBot bot, DatabaseHandler databaseHandler) {
         this.bot = bot;

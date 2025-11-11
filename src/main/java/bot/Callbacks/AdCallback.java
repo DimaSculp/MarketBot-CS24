@@ -99,7 +99,7 @@ public class AdCallback implements BotCallbacks {
     }
 
     private void createGeoLink(){
-        String link = "https://t.me/SculpTestShopBot?start=geo_";
+        String link = "https://t.me/Market_OutFix_Bot?start=geo_"; //"https://t.me/SculpTestShopBot?start=geo_";
         String latitudeStr = String.format("%d_%06d", (int) latitude, (int) ((latitude - (int) latitude) * 1000000));
         String longitudeStr = String.format("%d_%06d", (int) longitude, (int) ((longitude - (int) longitude) * 1000000));
         geoLink = link + latitudeStr + "_" + longitudeStr;
@@ -128,7 +128,7 @@ public class AdCallback implements BotCallbacks {
         }
                 content.append("<b>").append(userLink.replace("https://t.me/", "")).append("</b>\n\n")
                 .append("<a href=\"").append(userLink).append(" \" >контакт продовца</a>\n")
-                .append("<a href=\"https://t.me/SculpTestShopBot\">разместить объявление</a>")
+                .append("<a href=\"https://t.me/Market_OutFix_Bot\">разместить объявление</a>")
                 .append("~").append(photos);
         return content.toString();
     }
@@ -150,7 +150,7 @@ public class AdCallback implements BotCallbacks {
                 media[i].caption(getContent());
             }
         }
-        long channelId = -1002351079725L;
+        long channelId = -1003210353097L;//-1002351079725L;
         try {
             bot.execute(new SendMediaGroup(channelId, media));
             System.out.println("Отправлена медиа группа в канал.");

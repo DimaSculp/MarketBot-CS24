@@ -12,7 +12,7 @@ public class InfoCommand implements BotCommands{
 
     @Override
     public String getContent() {
-        return "Этот бот создан для удобной публикации и отслеживания объявлений в канале Барахолка УрФУ.";
+        return "Этот бот создан для удобной публикации и отслеживания объявлений в барахолке Аутфикса @OutFix_Market. Написан на Java21 + java-telegram-bot-api";
     }
     @Override
     public String getCommand() {
