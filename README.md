@@ -1,43 +1,109 @@
-Announcement bot for UrFU Flea Market
+# MarketBot-CS24
 
-Authors: Andrey Babenko (https://t.me/minofprop), Dmitry Kukhtey (https://t.me/sculp2ra).
+[![Java](https://img.shields.io/badge/Java-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](#)
+[![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=flat-square&logo=mysql&logoColor=white)](#)
+[![Telegram Bot API](https://img.shields.io/badge/Telegram_Bot_API-2CA5E0?style=flat-square&logo=telegram&logoColor=white)](#)
+[![Status](https://img.shields.io/badge/статус-продакшен-brightgreen?style=flat-square)](#)
 
-Brief description: Telegram bot that accepts applications for posting ads, sends them for moderation, and also posts them in the UrFU Flea Market. The bot also has the ability to maintain a user's personal account.
+Маркетплейс б/у велосипедных запчастей на базе Telegram-бота.  
+5–10 объявлений в день, живой продакшен с модерацией.
 
-Goals:
+---
 
--implementation of the simplest information commands
+## Проблема и решение
 
-implementation of accepting ads and sending them to the moderation chat
+Рынок б/у велозапчастей раздроблен: люди продают в случайных чатах, без фотографий нормального качества и без геолокации.  
+MarketBot-CS24 — структурированная площадка внутри Telegram: продавец заполняет карточку через бота, модератор одобряет, объявление публикуется в канале.
 
--implementation of posting ads confirmed by moderation to the ad channel
+---
 
--implementation of a personal account with statistics
+## Архитектура
 
--implementation of deleting irrelevant ads from the ad channel (optional)
+```
+Продавец → [Бот приёма] → [Канал модерации] → (одобрение) → [Публичный канал объявлений]
+                                                ↓ (отклонение)
+                                           Уведомление продавцу
+```
 
--implementation of currency conversion in the ad (optional)
+**Компоненты:**
 
-Development stages:
+| Компонент | Роль |
+|-----------|------|
+| Telegram-бот | Приём объявлений, диалог с продавцом, уведомления |
+| Канал модерации | Приватный канал, куда падают объявления на проверку |
+| Публичный канал | Витрина: одобренные объявления с фото и локацией |
+| Yandex Geocoder | Определение города/района по адресу продавца |
 
-1.1) Connecting a library for working with Telegram API (https://github.com/pengrad/java-telegram-bot-api)
+**Жизненный цикл объявления:**
+1. Продавец пишет боту и отвечает на вопросы (название, фото, цена, адрес)
+2. Бот создаёт карточку и отправляет в канал модерации
+3. Модератор нажимает «Одобрить» или «Отклонить»
+4. При одобрении — карточка публикуется в публичный канал
 
-1.2) Implementation of processing the simplest information commands (/help, /info, /authors, /start) through separate classes
+---
 
-1.3) Writing tests for the command handler
+## Стек
 
-1.4) Adding asynchronicity
+[![Java](https://img.shields.io/badge/Java-ED8B00?style=flat-square&logo=openjdk&logoColor=white)](#)
+[![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=flat-square&logo=mysql&logoColor=white)](#)
+[![Telegram Bot API](https://img.shields.io/badge/Telegram_Bot_API-2CA5E0?style=flat-square&logo=telegram&logoColor=white)](#)
+[![Yandex Geocoder](https://img.shields.io/badge/Yandex_Geocoder-FF0000?style=flat-square&logo=yandex&logoColor=white)](#)
+[![Maven](https://img.shields.io/badge/Maven-C71A36?style=flat-square&logo=apachemaven&logoColor=white)](#)
 
-2.1) Connecting the DB to the bot
+---
 
-2.2) Creating a simple personal account (user ID, contact, number of active ads, money earned from ads)
+## Скриншоты
 
-3.1) Creating an ad creation button
+> Вставьте скриншоты в папку `docs/screenshots/` и раскомментируйте строки ниже.
 
-3.2) Creating an ad in several stages: name, description, price, photo (up to 10)
+<!-- ![Диалог с ботом](docs/screenshots/bot_dialog.png) -->
+<!-- *Процесс подачи объявления* -->
 
-3.3) Parsing the sent information into a beautiful ad
+<!-- ![Канал модерации](docs/screenshots/moderation_channel.png) -->
+<!-- *Карточка объявления с кнопками одобрения* -->
 
-4.1) Sending a compiled announcement to the moderation chat
+<!-- ![Публичный канал](docs/screenshots/public_channel.png) -->
+<!-- *Опубликованное объявление в публичном канале* -->
 
-4.2) Adding the possibility of confirmation or refusal with a note of the reason for the publication of the announcement. The response to the message with the announcement with the text "approve" confirms and publishes the announcement in the channel with announcements, any other text is transmitted to the creator of the announcement in the bot as an explanation of the refusal, the announcement is not published.
+---
+
+## Запуск
+
+### Переменные окружения
+
+Создайте файл `.env` или передайте переменные в окружение:
+
+```env
+BOT_TOKEN=your_telegram_bot_token
+MODERATION_CHANNEL_ID=-100xxxxxxxxxx
+PUBLIC_CHANNEL_ID=-100xxxxxxxxxx
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=marketbot
+DB_USER=root
+DB_PASSWORD=secret
+YANDEX_GEOCODER_KEY=your_yandex_api_key
+```
+
+### Локальный запуск
+
+```bash
+# Собрать
+mvn clean package -DskipTests
+
+# Запустить
+java -jar target/MarketBot-CS24.jar
+```
+
+### Схема БД
+
+```bash
+# Накатить миграции (если используется Liquibase/Flyway)
+mvn flyway:migrate
+```
+
+---
+
+## Статус
+
+**В продакшене** — 5–10 объявлений в день, активная модерация.
