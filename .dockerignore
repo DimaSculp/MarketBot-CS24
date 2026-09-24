@@ -1,0 +1,13 @@
+target/
+.git/
+.idea/
+*.iml
+.env
+.env.*
+!.env.example
+*.md
+compose.yaml
+Dockerfile
+.github/
+compose.override.yaml
+monitoring/
