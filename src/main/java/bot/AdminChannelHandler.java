@@ -2,8 +2,7 @@ package bot;
 
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.model.Message;
-import com.pengrad.telegrambot.request.CopyMessage;
-import com.pengrad.telegrambot.request.SendMessage;
+import com.pengrad.telegrambot.request.ForwardMessage;
 
 import java.util.List;
 
@@ -21,16 +20,15 @@ public class AdminChannelHandler {
         long chatId = channelPost.chat().id();
         if (chatId == MARKET_PUSH_CHANNEL_ID) {
             System.out.println("Получено сообщение из канала Маркет Пуши.");
-            List<Long> allUserIds = databaseHandler.getAllUserIds(); // Получаем ID всех пользователей
+            List<Long> allUserIds = databaseHandler.getAllUserIds();
 
             for (Long userId : allUserIds) {
-                // Копируем сообщение всем пользователям
-                CopyMessage copyMessage = new CopyMessage(
+                ForwardMessage forwardMessage = new ForwardMessage(
                         userId,
                         channelPost.chat().id(),
                         channelPost.messageId()
                 );
-                bot.execute(copyMessage);
+                bot.execute(forwardMessage);
             }
             System.out.println("Сообщение из Маркет Пуши переслано " + allUserIds.size() + " пользователям.");
         }

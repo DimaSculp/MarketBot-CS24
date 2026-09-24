@@ -40,7 +40,7 @@ public class Keyboards {
         );
     }
 
-    public static InlineKeyboardMarkup removeAdChoice(int adNumber) { // NEW
+    public static InlineKeyboardMarkup removeAdChoice(int adNumber) {
         return new InlineKeyboardMarkup(
                 new InlineKeyboardButton("Продано! ✅").callbackData("sold_ad_" + adNumber),
                 new InlineKeyboardButton("Не продано ❌").callbackData("unsold_ad_" + adNumber)

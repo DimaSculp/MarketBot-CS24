@@ -26,8 +26,7 @@ public class ProfileCommand implements BotCommands {
         if (user != null) {
             return "Ваш профиль:\n" +
                     "ID: " + user.getUserId() + "\n" +
-                    "Активные объявления: " + user.getActiveAdsCount() + "\n" +
-                    "Заработанные деньги: " + user.getEarnedMoney() + " рублей";
+                    "Активные объявления: " + user.getActiveAdsCount() + "\n";
         } else {
             return "Профиль не найден.";
         }

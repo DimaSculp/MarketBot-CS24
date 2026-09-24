@@ -7,8 +7,6 @@ import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup;
 import com.pengrad.telegrambot.request.SendMediaGroup;
 import com.pengrad.telegrambot.model.request.InputMediaPhoto;
 
-
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -95,7 +93,7 @@ public class AdCallback implements BotCallbacks {
         return price > 0;
     }
     public boolean isPhotosSet() {
-            return photos.size() > 0 && photos.size() <= 10;
+        return photos.size() > 0 && photos.size() <= 10;
     }
 
     private void createGeoLink(){
@@ -120,14 +118,14 @@ public class AdCallback implements BotCallbacks {
         StringBuilder content = new StringBuilder();
         content.append("<b>").append(title).append("</b>\n\n")
                 .append("<i>").append(description).append("</i>").append("\n\n")
-                .append("<b>Цена: </b>").append(price).append(" руб.\n")
-                .append("<b>Место: </b>");
+                .append("<b>Цена: </b>").append(price).append(" руб.\n");
         if(longitude != 0){
-            content.append("<a href=\"").append(geoLink).append(" \" >")
+            content.append("<b>Место: </b>")
+                    .append("<a href=\"").append(geoLink).append(" \" >")
                     .append("<i>").append(address).append("</i>").append("</a>\n\n");
         }
-                content.append("<b>").append(userLink.replace("https://t.me/", "")).append("</b>\n\n")
-                .append("<a href=\"").append(userLink).append(" \" >контакт продовца</a>\n")
+        content.append("<b>").append(userLink.replace("https://t.me/", "")).append("</b>\n\n")
+                .append("<a href=\"").append(userLink).append(" \" >контакт продавца</a>\n")
                 .append("<a href=\"https://t.me/Market_OutFix_Bot\">разместить объявление</a>")
                 .append("~").append(photos);
         return content.toString();
@@ -158,6 +156,4 @@ public class AdCallback implements BotCallbacks {
             System.err.println("Ошибка при отправке медиа-группы в канал: " + e.getMessage());
         }
     }
-
-
 }
