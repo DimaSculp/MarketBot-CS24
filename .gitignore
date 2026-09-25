@@ -1,0 +1,12 @@
+# Сборка
+target/
+
+# IDE
+*.iml
+.vscode/
+
+# Локальные настройки и секреты
+.env
+.env-prod
+
+.DS_Store

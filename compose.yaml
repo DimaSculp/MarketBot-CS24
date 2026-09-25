@@ -1,0 +1,88 @@
+name: outfix-market
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-outfix}
+      POSTGRES_USER: ${POSTGRES_USER:-outfix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Задайте POSTGRES_PASSWORD в .env}
+    volumes:
+      # С PostgreSQL 18 данные лежат в /var/lib/postgresql/<версия>/docker, монтируется родительский каталог
+      - postgres-data:/var/lib/postgresql
+    # Только внутренняя сеть: ни порта на хосте, ни выхода в интернет
+    networks: [db]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  bot:
+    build: .
+    # На сервере BOT_IMAGE задаёт деплой из CI (ghcr.io/...:sha-...); локально образ собирается из исходников
+    image: ${BOT_IMAGE:-outfix-market-bot:latest}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # "postgres" — имя сервиса, Docker DNS резолвит его в контейнер внутри сети db
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-outfix}
+      DB_USER: ${POSTGRES_USER:-outfix}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - db          # доступ к базе
+      - monitoring  # /metrics для Prometheus
+      - default     # выход в интернет: Telegram Bot API и Геокодер
+    depends_on:
+      postgres:
+        condition: service_healthy
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  prometheus:
+    image: prom/prometheus:v3.14.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-30d}
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    ports:
+      # Веб-интерфейс с графиками и алертами, только с этой машины.
+      # На сервере — через SSH-туннель: ssh -L 9090:localhost:9090 <сервер>, затем http://localhost:9090
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - monitoring
+      - default     # публикация порта не работает во внутренней сети
+
+  alertmanager:
+    image: prom/alertmanager:v0.34.1
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/etc/alertmanager/entrypoint.sh"]
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      ALERT_CHAT_ID: ${ALERT_CHAT_ID:-}
+    volumes:
+      - ./monitoring/alertmanager/entrypoint.sh:/etc/alertmanager/entrypoint.sh:ro
+      - alertmanager-data:/alertmanager
+    networks:
+      - monitoring
+      - default     # отправка алертов в Telegram
+
+networks:
+  db:
+    internal: true
+  monitoring:
+    internal: true
+
+volumes:
+  postgres-data:
+  prometheus-data:
+  alertmanager-data:

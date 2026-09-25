@@ -1,0 +1,20 @@
+<configuration>
+    <!-- Уровень логов бота задаётся переменной LOG_LEVEL (TRACE, DEBUG, INFO, WARN, ERROR) -->
+    <variable name="LOG_LEVEL" value="${LOG_LEVEL:-INFO}"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{24} [chat=%X{chatId:--} update=%X{updateId:--}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="ru.outfix.market" level="${LOG_LEVEL}"/>
+    <!-- Сторонние библиотеки: только предупреждения, чтобы не засорять вывод -->
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+    <logger name="org.flywaydb" level="INFO"/>
+    <logger name="okhttp3" level="WARN"/>
+
+    <root level="WARN">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

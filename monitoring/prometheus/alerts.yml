@@ -1,0 +1,70 @@
+groups:
+  - name: outfix-market-bot
+    rules:
+      - alert: BotDown
+        expr: up{job="bot"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Бот недоступен"
+          description: "Prometheus не может получить метрики бота больше 2 минут: контейнер упал или перезапускается."
+
+      - alert: DatabaseDown
+        expr: outfix_database_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Бот не может подключиться к PostgreSQL"
+          description: "Бот работает, но база недоступна больше 2 минут: пользователи не получают ответов."
+
+      - alert: TelegramPollingErrors
+        expr: increase(outfix_telegram_polling_errors_total[5m]) > 5
+        labels:
+          severity: critical
+        annotations:
+          summary: "Бот не получает апдейты от Telegram"
+          description: "{{ $value | humanize }} ошибок getUpdates за 5 минут. Проверьте сеть сервера и токен."
+
+      - alert: UpdateProcessingErrors
+        expr: sum(increase(outfix_updates_seconds_count{outcome="error"}[10m])) > 5
+        labels:
+          severity: warning
+        annotations:
+          summary: "Ошибки при обработке сообщений"
+          description: "{{ $value | humanize }} необработанных ошибок за 10 минут. Подробности — в логах бота."
+
+      - alert: TelegramApiErrors
+        expr: sum by (method) (increase(outfix_telegram_api_errors_total[10m])) > 10
+        labels:
+          severity: warning
+        annotations:
+          summary: "Telegram отклоняет запросы {{ $labels.method }}"
+          description: "{{ $value | humanize }} ошибок за 10 минут."
+
+      - alert: AdSubmissionFailed
+        expr: increase(outfix_ads_total{event=~"submit_failed|publish_failed"}[30m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Объявление не удалось отправить на модерацию или опубликовать"
+          description: "Проверьте, что бот — администратор каналов модерации и объявлений."
+
+      - alert: DatabasePoolExhausted
+        expr: hikaricp_connections_pending{pool="outfix-db"} > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Не хватает соединений с БД"
+          description: "Запросы ждут свободного соединения дольше 5 минут."
+
+      - alert: HighHeapUsage
+        expr: sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"}) > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Память JVM почти исчерпана"
+          description: "Heap занят на {{ $value | humanizePercentage }} дольше 10 минут."
